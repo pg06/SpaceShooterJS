@@ -18,6 +18,15 @@
     opacity: {}
   };
   var powerUps = [];
+  var menuMessages = [];
+  var menuMessagesSelection = [];
+  var menuOptions = {default: []};
+  // coordenadas padrões da nave principal (Defender)
+  var defaultDefender = {
+    sourceX: 0, sourceY: 0, 
+    sourceXLeft: 227, sourceYLeft: 0,
+    sourceXRight: 257, sourceYRight: 0
+  };
   
   //variáveis úteis
   var alienFrequency = 100;
@@ -40,7 +49,14 @@
   var aliensCountToWin = 100;
   var mvHorizontal = 3;
   var mvVertical = 2;
-  
+  var menuHeight = cnv.height/2;
+  var menuWidth = cnv.width/2;
+  var menuX = (cnv.width-menuWidth)/2;
+  var menuY = (cnv.height-menuHeight)/2;
+  var toggleSound = 'on';
+  var menuType = 'default';
+  var isMenu = false;
+
   //sprites
   //imagem
   var img = new Image();
@@ -88,41 +104,126 @@
   scoreMessage.textAlign = 'left';
   updateScore();
   messages.push(scoreMessage);
+
+  // Mensagens do Menu
+  var menuMessageTitle = new ObjectMessage(menuX+60,"MENU","#FFF");
+  menuMessageTitle.font = "15px emulogic";
+  menuMessages.push(menuMessageTitle);
+  var menuMessageSound = new ObjectMessage(menuX+115,"SOM LIG","#EEE");
+  menuMessageSound.font = "12px emulogic";
+  menuMessageSound.actionType = 'sound';
+  menuMessages.push(menuMessageSound);
+  var menuMessageStyles = new ObjectMessage(menuX+160,"NAVES","#EEE");
+  menuMessageStyles.font = "12px emulogic";
+  menuMessageStyles.actionType = 'ships';
+  menuMessages.push(menuMessageStyles);
+  var menuMessageAbout = new ObjectMessage(menuX+205,"SOBRE","#EEE");
+  menuMessageAbout.font = "12px emulogic";
+  menuMessageAbout.actionType = 'about';
+  menuMessages.push(menuMessageAbout);
+  menuMessages[1].color = YELLOW;
   
   //entradas
   var TOP = 38, BOTTOM = 40, LEFT = 37, RIGHT = 39;
-  var ENTER = 13, SPACE = 32, SHIFT = 15, ESC = 27;
+  var ENTER = 13, SPACE = 32, SHIFT = 15, ESC = 27, BACKSPACE = 8;
   
   //ações
-  var mvLeft = mvRight = mvTop = mvBottom = shoot = spaceIsDown = false;
+  var mvLeft = mvRight = mvTop = mvBottom = shoot = spaceIsDown = confirmESC = false;
   
   //estados do jogo
   var LOADING = 0, PLAYING = 1, PAUSED = 2, OVER = 3;
   var gameState = LOADING;
-  
+
+  var menuMessagesSelectionObj = {};
+  function checkNextMenu(direction) {
+    var limitMin = menuType === 'default' ? 1 : 0;
+    if (typeof menuMessagesSelectionObj[menuType] === 'undefined') {
+      menuMessagesSelectionObj[menuType] = limitMin;
+    }
+    menuMessagesSelectionObj[menuType] = menuMessagesSelectionObj[menuType];
+    if (direction.length > 0) {
+      var dimension = menuType === 'default' ? 0 : 1;
+      var loopAction = menuOptions[menuType];
+      menuMessagesSelectionObj[menuType] += direction[dimension] > 1 ? 0 : direction[dimension];
+      if (direction[dimension]) {
+        if (menuMessagesSelectionObj[menuType] === menuOptions[menuType].length) {
+          menuMessagesSelectionObj[menuType] = limitMin;
+        } else if (menuMessagesSelectionObj[menuType] < limitMin) {
+          menuMessagesSelectionObj[menuType] = menuOptions[menuType].length-1;
+        }
+      }
+      for (var i in menuOptions[menuType]) {
+        if (menuType === 'default') {
+          menuOptions[menuType][i].color = i == menuMessagesSelectionObj[menuType] ? YELLOW : "white";
+          if (!direction[dimension] && i == menuMessagesSelectionObj[menuType]) {
+            var changeText = ['LIG', 'DES'];
+            changeText = menuOptions[menuType][i].text.indexOf('LIG') > -1 ? ['LIG','DES'] : ['DES','LIG']
+            menuOptions[menuType][i].text = menuOptions[menuType][i].text.replace(changeText[0], changeText[1]);
+            menuOptions[menuType][i].action = true;
+          }
+        } else if (menuType === 'ships') {
+          menuOptions[menuType][i].outline = i == menuMessagesSelectionObj[menuType] ? true : false;
+          if (!direction[dimension] && i == menuMessagesSelectionObj[menuType]) {
+            // Mudar o sprite da nave padrão
+            defaultDefender.sourceX = menuOptions[menuType][i].sourceX;
+            defaultDefender.sourceY = menuOptions[menuType][i].sourceY;
+            defaultDefender.sourceXLeft = menuOptions[menuType][i].sourceXLeft;
+            defaultDefender.sourceYLeft = menuOptions[menuType][i].sourceYLeft;
+            defaultDefender.sourceXRight = menuOptions[menuType][i].sourceXRight;
+            defaultDefender.sourceYRight = menuOptions[menuType][i].sourceYRight;
+            defender.sourceX = menuOptions[menuType][i].sourceX;
+            defender.sourceY = menuOptions[menuType][i].sourceY;
+            defender.sourceXLeft = menuOptions[menuType][i].sourceXLeft;
+            defender.sourceYLeft = menuOptions[menuType][i].sourceYLeft;
+            defender.sourceXRight = menuOptions[menuType][i].sourceXRight;
+            defender.sourceYRight = menuOptions[menuType][i].sourceYRight;
+          }
+        }
+      }
+    }
+  }
   // Verificação das teclas pressionadas no jogo
   // movimento 'keydown': sempre que uma tecla for pressionada
   window.addEventListener('keydown',function(e){
+    var direction = [];
     var key = e.keyCode;
     // Para descobrir o código das teclas específicas 
-      // descomente a linha abaixo e abra o console no navegador
-      // console.log('Codigo da Tecla: ' + key);
+    // descomente a linha abaixo e abra o console no navegador
+    // console.log('Codigo da Tecla: ' + key);
     switch(key){
       case LEFT:
         mvLeft = true;
+        direction = [0,-1];
         e.preventDefault();
         break;
       case RIGHT:
         mvRight = true;
+        direction = [0,1];
         e.preventDefault();
         break;
       case TOP:
         mvTop = true;
+        direction = [-1,-1];
         e.preventDefault();
         break;
       case BOTTOM:
         mvBottom = true;
+        direction = [1,1];
         e.preventDefault();
+        break;
+      case ENTER:
+        direction = [0,0];
+        e.preventDefault();
+        break;
+      case BACKSPACE:
+      case ESC:
+        e.preventDefault();
+        if (menuType !== 'default') {
+          confirmESC = false;
+          menuType = 'default';  
+        } else {
+          confirmESC = true;
+        }
         break;
       case SPACE:
         if(!spaceIsDown){
@@ -131,6 +232,9 @@
         }
         break;
     }
+    if(isMenu) {
+      checkNextMenu(direction);
+    }
   },false);
   // movimento 'keyup': sempre que uma tecla pressionada for solta
   window.addEventListener('keyup',function(e){
@@ -138,11 +242,11 @@
     switch(key){
       case LEFT:
         mvLeft = false;
-         e.preventDefault();
+        e.preventDefault();
         break;
       case RIGHT:
         mvRight = false;
-         e.preventDefault();
+        e.preventDefault();
         break;
       case TOP:
         mvTop = false;
@@ -153,14 +257,27 @@
         e.preventDefault();
         break;
       case ENTER:
+        if(gameState !== OVER){
+          if (startMessage.visible) {
+            gameState = PLAYING;
+            startMessage.visible = false;
+          }
+          // if (gameState === PLAYING) {
+          //   gameState = PAUSED;
+          //   isMenu = true;
+          // }
+        }
+        break;
       case ESC:
         if(gameState !== OVER){
-          if(gameState !== PLAYING){
+          if(gameState !== PLAYING && confirmESC){
             gameState = PLAYING;
+            isMenu = false;
             startMessage.visible = false;
             pausedMessage.visible = false;
           } else {
             gameState = PAUSED;
+            isMenu = true;
             pausedMessage.visible = true;
           }
         }
@@ -197,7 +314,9 @@
 
   function loop(){
     requestAnimationFrame(loop, cnv);
-    //define as ações com base no estado do jogo
+    var extra;
+    gameSounds();
+    //define as ações com base no estado do jogo    
     switch(gameState){
       case LOADING:
         statusData.earth.count = 0;
@@ -210,42 +329,52 @@
       case OVER:
         endGame();
         break;
+      case PAUSED:
+        if (!startMessage.visible) {
+          extra = 'menu';
+        }
+        break;
     }
-    render();
+    render(extra);
   }
 
   function update(){
     // move para cima
     if(mvTop && !mvBottom){
       defender.vy = mvVertical;
-      defender.sourceX = 0;
+      defender.sourceX = defaultDefender.sourceX;
+      defender.sourceY = defaultDefender.sourceY;
     }
 
     // move para baixo
     if(mvBottom && !mvTop){
       defender.vy = -mvVertical;
-      defender.sourceX = 0;
+      defender.sourceX = defaultDefender.sourceX;
+      defender.sourceY = defaultDefender.sourceY;
     }
 
     //move para a esquerda
     if(mvLeft && !mvRight){
       defender.vx = -mvHorizontal;
       // muda o sprite da nave ao virar para esquerda
-      defender.sourceX = 227;
+      defender.sourceX = defaultDefender.sourceXLeft;
+      defender.sourceY = defaultDefender.sourceYLeft;
     }
     
     //move para a direita
     if(mvRight && !mvLeft){
       defender.vx = mvHorizontal;
       // muda o sprite da nave ao virar para esquerda
-      defender.sourceX = 257;
+      defender.sourceX = defaultDefender.sourceXRight;
+      defender.sourceY = defaultDefender.sourceYRight;
     }
     
     //para a nave
     if(!mvLeft && !mvRight && !mvTop && !mvBottom){
       defender.vx = 0;
       defender.vy = 0;
-      defender.sourceX = 0;
+      defender.sourceX = defaultDefender.sourceX;
+      defender.sourceY = defaultDefender.sourceY;
     }
 
     
@@ -403,7 +532,7 @@
       missile.vy = -8;
       sprites.push(missile);
       missiles.push(missile);
-      playSound(FIRE);
+      playSound(FIRE, toggleSound);
       shots++;
     } else if(shootType === 'double'){
       var missile1 = new Missile(158,0,11,30,defender.centerX() - 6 - 15,defender.y - 13);
@@ -416,7 +545,7 @@
       missiles.push(missile1);
       sprites.push(missile2);
       missiles.push(missile2);
-      playSound(FIRE);
+      playSound(FIRE, toggleSound);
       shots=shots+2;
     } else if(shootType === 'triple'){
       var missile1 = new Missile(158,0,11,30,defender.centerX() - 4,defender.y - 21);
@@ -434,7 +563,7 @@
       missiles.push(missile2);
       sprites.push(missile3);
       missiles.push(missile3);
-      playSound(FIRE);
+      playSound(FIRE, toggleSound);
       shots=shots+3;
     } else if(shootType === 'special'){
       var missile = new Missile(169,0,29,43,defender.centerX() - 15,defender.y - 13);
@@ -442,7 +571,7 @@
       missile.vy = -8;
       sprites.push(missile);
       missiles.push(missile);
-      playSound(FIRE);
+      playSound(FIRE, toggleSound);
       shots++;
     }
   }
@@ -538,7 +667,7 @@
     // habilitar opacidade conforme o tempo passa
     alien.opacity = 1;
     alien.fade = true;
-    playSound(EXPLOSION);
+    playSound(EXPLOSION, toggleSound);
     setTimeout(function(){
       removeObjects(alien,aliens);
       removeObjects(alien,sprites);
@@ -548,7 +677,7 @@
   // absorver powerUps
   function absorvPowerUp(powerUp){
     missileType = powerUp.type;
-    // playSound(EXPLOSION);
+    // playSound(EXPLOSION, toggleSound);
     removeObjects(powerUp,powerUps);
     removeObjects(powerUp,sprites);
   }
@@ -628,16 +757,18 @@
   }
   
   //efeitos sonoros do jogo
-  function playSound(soundType){
-    var sound = document.createElement("audio");
-    if(soundType === EXPLOSION){
-      sound.src = "sound/explosion.mp3";
-    } else {
-      sound.src = "sound/fire.mp3";
+  function playSound(soundType, toggle){
+    if (toggle === 'on') {
+      var sound = document.createElement("audio");
+      if(soundType === EXPLOSION){
+        sound.src = "sound/explosion.mp3";
+      } else {
+        sound.src = "sound/fire.mp3";
+      }
+      sound.addEventListener("canplaythrough",function(){
+        sound.play();
+      },false);
     }
-    sound.addEventListener("canplaythrough",function(){
-      sound.play();
-    },false);
   }
 
   // atualizar os sprites de explosão
@@ -682,7 +813,172 @@
     }
   }
 
-  function render(){
+  function renderText(message) {
+    if(message.visible){
+      ctx.font = message.font;
+      ctx.fillStyle = message.color;
+      ctx.textBaseline = message.baseline;
+      ctx.textAlign = message.textAlign;
+      // garante que os textos com alinhamento no centro seja centralizado
+      if (message.textAlign === 'center') {
+        message.x = (cnv.width - ctx.measureText(message.text).width)/2;
+        ctx.textAlign = 'left';
+      }
+      ctx.fillText(message.text,message.x,message.y);
+    }
+  }
+  function gameSounds() {
+    if (toggleSound === 'on') {
+      if (!document.getElementById('musicTheme')) {
+        document.getElementsByTagName("body")[0].insertAdjacentHTML('beforeend','<audio id="musicTheme" src="sound/music.mp3" type="audio/mpeg" loop autoplay></audio>');
+      }
+    }
+    else if (toggleSound === 'off') {
+      if (document.getElementById('musicTheme')) {
+        document.getElementById("musicTheme").parentNode.removeChild(document.getElementById("musicTheme"));
+      }
+    }
+  }
+  function renderMenuLayout(layoutType) {
+    var newMenuX = (cnv.width-menuHeight)/2;
+    var newMenuY = (cnv.height-menuWidth)/2;
+    if (layoutType === 'default') {
+      ctx.fillStyle = "#151515";
+      ctx.fillRect(menuX,menuY,menuWidth,menuHeight);
+      ctx.fillStyle = "white";
+      ctx.fillRect(menuX+10,menuY+10,menuWidth-20,menuHeight-20);
+      ctx.fillStyle = "#131313";
+      ctx.fillRect(menuX+15,menuY+15,menuWidth-30,menuHeight-30);
+    } else if (layoutType === 'ships') {
+      ctx.fillStyle = "#151515";
+      ctx.fillRect(newMenuX,newMenuY,menuHeight,menuWidth);
+      ctx.fillStyle = "white";
+      ctx.fillRect(newMenuX+10,newMenuY+10,menuHeight-20,menuWidth-20);
+      ctx.fillStyle = "#131313";
+      ctx.fillRect(newMenuX+15,newMenuY+15,menuHeight-30,menuWidth-30);
+    } else if (layoutType === 'about') {
+      ctx.fillStyle = "#151515";
+      ctx.fillRect(newMenuX,newMenuY,menuHeight,menuWidth);
+      ctx.fillStyle = "white";
+      ctx.fillRect(newMenuX+10,newMenuY+10,menuHeight-20,menuWidth-20);
+      ctx.fillStyle = "#131313";
+      ctx.fillRect(newMenuX+15,newMenuY+15,menuHeight-30,menuWidth-30);
+    }
+  }
+  // Renderizar a tela de Menu
+  function renderMenu(MenuType) {
+    var loopMessages = [];
+    var loopSprites = [];
+    var newMenuX = (cnv.width-menuHeight)/2;
+    var newMenuY = (cnv.height-menuWidth)/2;
+    // box com as opções do menu
+    // -->> Essa fonte não permite acentos <<--
+    // criando a janela do menu
+    renderMenuLayout(MenuType);
+    if (MenuType === 'default') {
+      loopMessages = menuMessages;
+    } else if (MenuType === 'ships') {
+      loopMessages = [];
+      // adicionando conteúdo na janela
+      var messageAbout = new ObjectMessage(newMenuY+30,"Selecione a Nave","#EEE");
+      messageAbout.font = "12px emulogic";
+      loopMessages.push(messageAbout);
+      loopSprites = menuOptions[MenuType];
+      // carregando os sprites
+      if (typeof menuOptions[MenuType] === 'undefined') {
+        loopSprites = [];
+        var newDefenderSprite = new Sprite(0,0,30,40,newMenuX+50,newMenuY+75);
+        newDefenderSprite.sourceXLeft = 227;
+        newDefenderSprite.sourceXRight = 257;
+        newDefenderSprite.sourceYRight = 0;
+        newDefenderSprite.sourceYLeft = 0;
+        newDefenderSprite.outline = true;
+        loopSprites.push(newDefenderSprite);
+        var newDefenderSprite = new Sprite(0,100,30,40,newMenuX+110,newMenuY+75);
+        newDefenderSprite.sourceXLeft = 30;
+        newDefenderSprite.sourceXRight = 60;
+        newDefenderSprite.sourceYRight = 100;
+        newDefenderSprite.sourceYLeft = 100;
+        loopSprites.push(newDefenderSprite);
+        var newDefenderSprite = new Sprite(90,100,30,40,newMenuX+170,newMenuY+75);
+        newDefenderSprite.sourceXLeft = 120;
+        newDefenderSprite.sourceXRight = 150;
+        newDefenderSprite.sourceYRight = 100;
+        newDefenderSprite.sourceYLeft = 100;
+        loopSprites.push(newDefenderSprite);
+      }
+    } else if (MenuType === 'about') {
+      loopMessages = [];
+      // adicionando conteúdo na janela
+      var messageAbout = new ObjectMessage(newMenuY+20,"COLABORADORES","#EEE");
+      messageAbout.font = "12px emulogic";
+      loopMessages.push(messageAbout);
+      var messageAbout = new ObjectMessage(newMenuY+65,"BRUNA LIMA","#EEE");
+      messageAbout.font = "12px emulogic";
+      messageAbout.textAlign = "left";
+      messageAbout.x = newMenuX+25;
+      loopMessages.push(messageAbout);
+      var messageAbout = new ObjectMessage(newMenuY+105,"PAULO MELO","#EEE");
+      messageAbout.font = "12px emulogic";
+      messageAbout.textAlign = "left";
+      messageAbout.x = newMenuX+25;
+      loopMessages.push(messageAbout);
+      var messageAbout = new ObjectMessage(newMenuY+145,"YAGO ALVES","#EEE");
+      messageAbout.font = "12px emulogic";
+      messageAbout.textAlign = "left";
+      messageAbout.x = newMenuX+25;
+      loopMessages.push(messageAbout);
+    }
+    menuOptions[MenuType] = loopSprites.length === 0 ? loopMessages : loopSprites;
+
+    for (var i in loopMessages) {
+      var message = loopMessages[i];
+      // verificar se alguma ação foi requisitada pela função `checkNextMenu()`
+      if (message.action) {
+        // verificar o tipo da ação
+        switch (message.actionType) {
+          case 'sound':
+            toggleSound = toggleSound === 'on' ? 'off': 'on';
+            gameSounds();
+            break;
+          case 'ships':
+            menuType = 'ships';
+            break;
+          case 'about':
+            menuType = 'about';
+            break;
+        }
+        message.action = false;
+      }
+      renderText(message);
+    }
+
+    for (var i in loopSprites) {
+      var spr = loopSprites[i];
+      if (!spr.img) {
+        spr.img = img;
+      }
+      if (spr.outline) {
+        // var dArr = [-1,-1, 0,-1, 1,-1, -1,0, 1,0, -1,1, 0,1, 1,1], // offset array
+        // s = 2,  // scale
+        // i = 0;  // iterator
+        // for(; i < dArr.length; i += 2) 
+        //   ctx.drawImage(spr.img,spr.sourceX,spr.sourceY,spr.width,spr.height,spr.x + dArr[i]*s,spr.y + dArr[i+1]*s,spr.ratioX*spr.width,spr.ratioY*spr.height);
+
+        // fill with color
+        // ctx.globalCompositeOperation = "source-in";
+        ctx.fillStyle = "#333";
+        ctx.fillRect(spr.x,spr.y,spr.width,spr.height);
+
+        // draw original image in normal mode
+        // ctx.globalCompositeOperation = "source-over";
+      }
+      ctx.drawImage(spr.img,spr.sourceX,spr.sourceY,spr.width,spr.height,Math.floor(spr.x),Math.floor(spr.y),spr.ratioX*spr.width,spr.ratioY*spr.height);
+    }
+  }
+
+  function render(extraContent){
+    var extra = extraContent || 'default';
     ctx.clearRect(0,0,cnv.width,cnv.height);
     //exibe os sprites
     if(sprites.length !== 0){
@@ -725,19 +1021,11 @@
     if(messages.length !== 0){
       for(var i in messages){
         var message = messages[i];
-        if(message.visible){
-          ctx.font = message.font;
-          ctx.fillStyle = message.color;
-          ctx.textBaseline = message.baseline;
-          ctx.textAlign = message.textAlign;
-          // garante que os textos com alinhamento no centro seja centralizado
-          if (message.textAlign === 'center') {
-            message.x = (cnv.width - ctx.measureText(message.text).width)/2;
-            ctx.textAlign = 'left';
-          }
-          ctx.fillText(message.text,message.x,message.y);
-        }
+        renderText(message);
       }
+    }
+    if (extra === 'menu') {
+      renderMenu(menuType);
     }
   }
   

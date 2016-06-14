@@ -21,9 +21,17 @@ var Sprite = function(sourceX,sourceY,width,height,x,y){
   this.opacity = 1;
   // Opacidade conforme o tempo passa
   this.fade = false;
+  // Configurar uma imagem
   this.img = '';
   this.spriteType = 'default';
   this.count = 0;
+  // Configurar outline
+  this.outline = '';
+  // Configurar outline
+  this.sourceXRight = 0;
+  this.sourceYRight = 0;
+  this.sourceXLeft = 0;
+  this.sourceYLeft = 0;
 }
 
 Sprite.prototype.centerX = function(){
@@ -86,6 +94,8 @@ var ObjectMessage = function(y,text,color){
   this.color = color;
   this.baseline = "top";
   this.textAlign = "center";
+  this.action = false;
+  this.actionType = 'text';
 }
 
 
