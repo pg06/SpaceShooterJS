@@ -32,6 +32,7 @@ var Sprite = function(sourceX,sourceY,width,height,x,y){
   this.sourceYRight = 0;
   this.sourceXLeft = 0;
   this.sourceYLeft = 0;
+  this.status = 'default';
 }
 
 Sprite.prototype.centerX = function(){
@@ -73,6 +74,8 @@ var Missile = function(sourceX,sourceY,width,height,x,y){
   //dispara o construtor do Sprite
   Sprite.call(this,sourceX,sourceY,width,height,x,y);
   this.power = 1;
+  this.spriteType = 'missile';
+  this.origin = 'defender';
 }
 
 // garante que os "Objetos" criados tenham as mesmas propriedades do objeto "Sprite"

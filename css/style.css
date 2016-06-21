@@ -3,3 +3,6 @@
   src: url("../fonte/emulogic.ttf")
 }
 
+canvas {
+    position: absolute;
+}

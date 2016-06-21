@@ -1,8 +1,10 @@
 (function(){
   // Criar local do jogo "canvas"
-  var cnv = document.querySelector('canvas');
+  var cnv = document.getElementById('canvas');
+  var cnvBG = document.getElementById('canvas-bg');
   //contexto de renderização 2d no "canvas"
   var ctx = cnv.getContext('2d');
+  var ctxBG = cnvBG.getContext('2d');
   
   //RECURSOS DO JOGO ========================================================>
   //arrays
@@ -14,7 +16,7 @@
   var messages = [];
   var statusData = {
     earth: {life: 3, count: 0},
-    spaceship: {life: 1, count: 0},
+    spaceship: {life: 3, count: 0},
     opacity: {}
   };
   var powerUps = [];
@@ -46,7 +48,7 @@
   var gameStatus = 'lose';
   var shootCount = 0;
   var alienCount = 0;
-  var aliensCountToWin = 100;
+  var aliensCountToWin = 50;
   var mvHorizontal = 3;
   var mvVertical = 2;
   var menuHeight = cnv.height/2;
@@ -56,6 +58,8 @@
   var toggleSound = 'on';
   var menuType = 'default';
   var isMenu = false;
+  var stopBgAnimation = false;
+  var invencibleStatusCount;
 
   //sprites
   //imagem
@@ -65,6 +69,13 @@
   assetsToLoad.push(img);
   //contador de recursos
   var loadedAssets = 0;
+
+  var velocity=100;
+  var bgImage;
+  bgImage = new Image();
+  bgImage.src = "img/background.png"
+  // bgImage.src = "http://www.uiupdates.com/wp-content/uploads/2015/03/game-background.jpg";
+  bgImage.addEventListener('load',drawImagePattern,false);
 
   //cenário
   var background = new Sprite(0,200,400,500,0,0);
@@ -76,7 +87,7 @@
   imgBackground.src = "img/background.png"; // <<<---
   assetsToLoad.push(imgBackground);
   //contador de recursos
-  var loadedAssets = 0;
+  loadedAssets = 0;
   sprites.push(background);
   
   //nave
@@ -124,11 +135,11 @@
   menuMessages[1].color = YELLOW;
   
   //entradas
-  var TOP = 38, BOTTOM = 40, LEFT = 37, RIGHT = 39;
+  var UP = 38, DOWN = 40, LEFT = 37, RIGHT = 39;
   var ENTER = 13, SPACE = 32, SHIFT = 15, ESC = 27, BACKSPACE = 8;
   
   //ações
-  var mvLeft = mvRight = mvTop = mvBottom = shoot = spaceIsDown = confirmESC = false;
+  var mvLeft = mvRight = mvUp = mvDown = shoot = shootAlien = spaceIsDown = confirmESC = false;
   
   //estados do jogo
   var LOADING = 0, PLAYING = 1, PAUSED = 2, OVER = 3;
@@ -201,13 +212,13 @@
         direction = [0,1];
         e.preventDefault();
         break;
-      case TOP:
-        mvTop = true;
+      case UP:
+        mvUp = true;
         direction = [-1,-1];
         e.preventDefault();
         break;
-      case BOTTOM:
-        mvBottom = true;
+      case DOWN:
+        mvDown = true;
         direction = [1,1];
         e.preventDefault();
         break;
@@ -248,30 +259,34 @@
         mvRight = false;
         e.preventDefault();
         break;
-      case TOP:
-        mvTop = false;
+      case UP:
+        mvUp = false;
         e.preventDefault();
         break;
-      case BOTTOM:
-        mvBottom = false;
+      case DOWN:
+        mvDown = false;
         e.preventDefault();
         break;
       case ENTER:
         if(gameState !== OVER){
           if (startMessage.visible) {
             gameState = PLAYING;
+            requestAnimationFrame(drawImagePattern);
             startMessage.visible = false;
+          } else {
+            if (gameState === PLAYING) {
+              gameState = PAUSED;
+              isMenu = true;
+            }
           }
-          // if (gameState === PLAYING) {
-          //   gameState = PAUSED;
-          //   isMenu = true;
-          // }
+          
         }
         break;
       case ESC:
         if(gameState !== OVER){
           if(gameState !== PLAYING && confirmESC){
             gameState = PLAYING;
+            requestAnimationFrame(drawImagePattern);
             isMenu = false;
             startMessage.visible = false;
             pausedMessage.visible = false;
@@ -297,26 +312,31 @@
       this.removeEventListener('load',loadHandler,false);
       //inicia o jogo
       gameState = PAUSED;
+      stopBgAnimation = true;
     }
   }
-  
-  // função para garantir que a imagem vai preencher a tela do jogo
-  var preencherTela = function(imgObj){
-    // garante que só ira executar a função com a imagem carregada
-    // se não entrará em loop infinito
-    if (!imgObj.complete) return false;
-      for (var w = 0; w < cnv.width; w += imgObj.width) {
-          for (var h = 0; h < cnv.height; h += imgObj.height) {
-              ctx.drawImage(imgObj, w, h);
-          }
-      }
+  var lastRepaintTime=window.performance.now();
+  function drawImagePattern(time){
+    if (!stopBgAnimation) {
+      lastRepaintTime = time-velocity/2;
+      var framegap=time-lastRepaintTime;
+      lastRepaintTime=time;
+      var translateY=velocity*(framegap/1000);
+      ctxBG.clearRect(0,0,cnvBG.width,cnvBG.height);
+      var pattern=ctxBG.createPattern(bgImage,"repeat-y");
+      ctxBG.fillStyle=pattern;
+      ctxBG.rect(0,0,cnvBG.width,cnvBG.height);
+      ctxBG.fill();
+      ctxBG.translate(0,translateY);
+      requestAnimationFrame(drawImagePattern);
+    }
   }
 
   function loop(){
     requestAnimationFrame(loop, cnv);
     var extra;
     gameSounds();
-    //define as ações com base no estado do jogo    
+    //define as ações com base no estado do jogo
     switch(gameState){
       case LOADING:
         statusData.earth.count = 0;
@@ -324,14 +344,17 @@
         console.log('CARREGANDO...');
         break;
       case PLAYING:
+        stopBgAnimation = false;
         update();
         break;
       case OVER:
+        stopBgAnimation = true;
         endGame();
         break;
       case PAUSED:
         if (!startMessage.visible) {
           extra = 'menu';
+          stopBgAnimation = true;
         }
         break;
     }
@@ -340,14 +363,14 @@
 
   function update(){
     // move para cima
-    if(mvTop && !mvBottom){
+    if(mvUp && !mvDown){
       defender.vy = mvVertical;
       defender.sourceX = defaultDefender.sourceX;
       defender.sourceY = defaultDefender.sourceY;
     }
 
     // move para baixo
-    if(mvBottom && !mvTop){
+    if(mvDown && !mvUp){
       defender.vy = -mvVertical;
       defender.sourceX = defaultDefender.sourceX;
       defender.sourceY = defaultDefender.sourceY;
@@ -369,15 +392,17 @@
       defender.sourceY = defaultDefender.sourceYRight;
     }
     
-    //para a nave
-    if(!mvLeft && !mvRight && !mvTop && !mvBottom){
+    //para os movimentos horizontais da nave
+    if(!mvLeft && !mvRight){
       defender.vx = 0;
-      defender.vy = 0;
       defender.sourceX = defaultDefender.sourceX;
+    }
+    //para os movimentos verticais da nave
+    if(!mvUp && !mvDown){
+      defender.vy = 0;
       defender.sourceY = defaultDefender.sourceY;
     }
 
-    
     // Dispara os misseis mesmo com a barra de espaço apertada
     shootCount++;
     if(shoot){
@@ -387,7 +412,7 @@
       }
     }
     
-    // atualiza a posição coordenadas (x, y) da nave no "Canvas"
+    // atualiza a posição das coordenadas (x, y) da nave no "Canvas"
     defender.x = Math.max(0,Math.min(cnv.width - defender.width, defender.x + defender.vx));
     defender.y = Math.max(0,Math.min(cnv.height - defender.height, defender.y - defender.vy));
     
@@ -427,17 +452,25 @@
         alienFrequency--;
       }
     }
-    
+    function fadeShip(ship) {
+      if (ship.fade && ship.opacity < 0.75) {
+        ship.opacity = 1;
+        ship.fade = false;
+      }
+    }
     //move os aliens
     for(var i in aliens){
       var alien = aliens[i];
       if(alien.state !== alien.EXPLODED){
         alien.y += alien.vy;
-        // fazer efeito ao receber tiro
-        if (alien.opacity < 0.75) {
-          alien.opacity = 1;
-          alien.fade = false;
+        // gerar tiros do alien
+        shootAlien++;
+          if (shootAlien > 60) {
+            fireMissile('default',alien);
+            shootAlien = 0;
         }
+        // fazer efeito ao receber tiro
+        fadeShip(alien);
         if(alien.state === alien.CRAZY){
           if(alien.x > cnv.width - alien.width || alien.x < 0){
             alien.vx *= -1;
@@ -445,7 +478,7 @@
           alien.x += alien.vx;
         }
       }
-      
+
       //confere se algum alien chegou à Terra
       if(alien.y > cnv.height + alien.height){
         statusData.earth.count += 1;
@@ -456,10 +489,10 @@
           gameState = OVER;
         }
       }
-      
+
       //confere se algum alien colidiu com a nave
-      if(collide(alien,defender)){
-        statusData.spaceship.count += 1;
+      if(alien.spriteType !== 'explosion' && collide(alien,defender)){
+        statusData.spaceship.count += statusData.spaceship.life;
         destroyAlien(alien);
         if (statusData.spaceship.count === statusData.spaceship.life) {
           removeObjects(defender,sprites);
@@ -470,34 +503,50 @@
       //confere se algum alien foi destruido
       for(var j in missiles){
         var missile = missiles[j];
-        if(collide(missile,alien) && alien.state !== alien.EXPLODED){
-          alien.life = alien.life - missile.power;
-          if (alien.life <= 0) {
-            destroyAlien(alien);
-            alienCount++;
-          } else {
-            alien.fade = true;
+        if (alien.state !== alien.EXPLODED) {
+          if(missile.origin === 'defender' && collide(missile,alien)) {
+            alien.life = alien.life - missile.power;
+            if (alien.life <= 0) {
+              destroyAlien(alien);
+              alienCount++;
+            } else {
+              alien.fade = true;
+            }
+            // contador de tiros
+            hits++;
+            //// Contador de tiros para acabar com o jogo foi RETIRADO
+            //// Verificar função checkEndGame()
+            removeObjects(missile,missiles);
+            removeObjects(missile,sprites);
+            j--;
           }
-          // contador de tiros
-          hits++;
-          //// Contador de tiros para acabar com o jogo foi RETIRADO
-          //// Verificar função checkEndGame()
-          // updateScore();
-          // if(parseInt(hits) === scoreToWin){
-          //  gameState = OVER;
-          //  //destroi todos os aliens
-          //  for(var k in aliens){
-          //    var alienk = aliens[k];
-          //    destroyAlien(alienk);
-          //  }
-          // }
-          removeObjects(missile,missiles);
-          removeObjects(missile,sprites);
-          j--;
-          i--;
+          
+            if (missile.origin === 'alien' && collide(missile,defender)) {
+              if (defender.status !== 'invulnerable') {
+                statusData.spaceship.count += 1;
+                defender.status = 'invulnerable';
+                defender.fade = true;
+                invencibleStatusCount = 1;
+                updateScore();
+              }
+              removeObjects(missile,missiles);
+              removeObjects(missile,sprites);
+              j--;
+            }
+
         }
       }
     }//fim da movimentação dos aliens
+    
+    if (invencibleStatusCount) {
+      invencibleStatusCount++;
+      fadeShip(defender);
+      if (invencibleStatusCount >= 100) {
+        invencibleStatusCount = 0;
+        defender.status = 'default';
+      }
+    }
+    
 
     function checkEndGame() {
       // Verifica se a quantidade de aliens abatidos é igual
@@ -505,7 +554,16 @@
       if (parseInt(alienCount) === aliensCountToWin) {
         gameState = OVER;
         gameStatus = 'win';
+        for(var k in aliens){
+          var alienk = aliens[k];
+          destroyAlien(alienk);
+        }
       }
+      if (statusData.earth.count === statusData.earth.life || statusData.spaceship.count === statusData.spaceship.life) {
+        gameState = OVER;
+        gameStatus = 'lose';
+      }
+      
     }
     checkEndGame();
     
@@ -525,50 +583,62 @@
 
 
   //criação dos mísseis
-  function fireMissile(shootType){
-    var shootType = shootType || 'default';
-    if(shootType === 'default'){
-      var missile = new Missile(150,0,8,13,defender.centerX() - 4,defender.y - 13);
-      missile.vy = -8;
-      sprites.push(missile);
-      missiles.push(missile);
-      playSound(FIRE, toggleSound);
-      shots++;
-    } else if(shootType === 'double'){
-      var missile1 = new Missile(158,0,11,30,defender.centerX() - 6 - 15,defender.y - 13);
-      var missile2 = new Missile(158,0,11,30,defender.centerX() - 6 + 15,defender.y - 13);
-      missile1.vy = -8;
-      missile2.vy = -8;
-      missile1.power = 2;
-      missile2.power = 2;
-      sprites.push(missile1);
-      missiles.push(missile1);
-      sprites.push(missile2);
-      missiles.push(missile2);
-      playSound(FIRE, toggleSound);
-      shots=shots+2;
-    } else if(shootType === 'triple'){
-      var missile1 = new Missile(158,0,11,30,defender.centerX() - 4,defender.y - 21);
-      var missile2 = new Missile(158,0,11,30,defender.centerX() - 4 + 20,defender.y - 13);
-      var missile3 = new Missile(158,0,11,30,defender.centerX() - 4 - 20,defender.y - 13);
-      missile1.vy = -8;
-      missile2.vy = -8;
-      missile3.vy = -8;
-      missile1.power = 3;
-      missile2.power = 3;
-      missile3.power = 3;
-      sprites.push(missile1);
-      missiles.push(missile1);
-      sprites.push(missile2);
-      missiles.push(missile2);
-      sprites.push(missile3);
-      missiles.push(missile3);
-      playSound(FIRE, toggleSound);
-      shots=shots+3;
-    } else if(shootType === 'special'){
-      var missile = new Missile(169,0,29,43,defender.centerX() - 15,defender.y - 13);
-      missile.power = 6;
-      missile.vy = -8;
+  function fireMissile(shootType,ship){
+    var ship = ship || defender;
+    if (ship.spriteType === 'defender') {
+      var shootType = shootType || 'default';
+      if(shootType === 'default'){
+        var missile = new Missile(150,0,8,25,defender.centerX() - 4,defender.y - 13);
+        missile.vy = -8;
+        sprites.push(missile);
+        missiles.push(missile);
+        playSound(FIRE, toggleSound);
+        shots++;
+      } else if(shootType === 'double'){
+        var missile1 = new Missile(158,0,11,30,defender.centerX() - 6 - 15,defender.y - 13);
+        var missile2 = new Missile(158,0,11,30,defender.centerX() - 6 + 15,defender.y - 13);
+        missile1.vy = -8;
+        missile2.vy = -8;
+        missile1.power = 2;
+        missile2.power = 2;
+        sprites.push(missile1);
+        missiles.push(missile1);
+        sprites.push(missile2);
+        missiles.push(missile2);
+        playSound(FIRE, toggleSound);
+        shots=shots+2;
+      } else if(shootType === 'triple'){
+        var missile1 = new Missile(158,0,11,30,defender.centerX() - 4,defender.y - 21);
+        var missile2 = new Missile(158,0,11,30,defender.centerX() - 4 + 20,defender.y - 13);
+        var missile3 = new Missile(158,0,11,30,defender.centerX() - 4 - 20,defender.y - 13);
+        missile1.vy = -8;
+        missile2.vy = -8;
+        missile3.vy = -8;
+        missile1.power = 3;
+        missile2.power = 3;
+        missile3.power = 3;
+        sprites.push(missile1);
+        missiles.push(missile1);
+        sprites.push(missile2);
+        missiles.push(missile2);
+        sprites.push(missile3);
+        missiles.push(missile3);
+        playSound(FIRE, toggleSound);
+        shots=shots+3;
+      } else if(shootType === 'special'){
+        var missile = new Missile(169,0,29,43,defender.centerX() - 15,defender.y - 13);
+        missile.power = 6;
+        missile.vy = -8;
+        sprites.push(missile);
+        missiles.push(missile);
+        playSound(FIRE, toggleSound);
+        shots++;
+      }
+    } else if (ship.spriteType === 'alien'){
+      var missile = new Missile(150,25,8,25,ship.centerX() - 4,ship.y - 13);
+      missile.vy = 8;
+      missile.power = 1;
+      missile.origin = 'alien';
       sprites.push(missile);
       missiles.push(missile);
       playSound(FIRE, toggleSound);
@@ -713,19 +783,17 @@
       hits = "0" + hits;
     }
     // scoreMessage.text = "PONTOS: " + hits " - ACC: " + acuracy + "%";
-    var earthLife = statusData.earth.life - statusData.earth.count;
-    switch (earthLife) {
-      case 1:
-        scoreMessage.color = RED;
-        break;
-      case 2:
-        scoreMessage.color = YELLOW;
-        break;
-      case 3:
-        scoreMessage.color = GREEN;
-        break;
+    var missingAliens = statusData.earth.count;
+    var shipLife = statusData.spaceship.life - statusData.spaceship.count;
+    if (missingAliens === 0 && shipLife === 3) {
+      scoreMessage.color = GREEN;
+    } else if (missingAliens === 1 || shipLife === 2) {
+      scoreMessage.color = YELLOW;
+    } else {
+      scoreMessage.color = RED;
     }
-    scoreMessage.text = "Vidas: " + (earthLife).toString();
+    scoreMessage.text = "Vidas: " + (shipLife).toString();
+    scoreMessage.text+= " - Invasores: " + (missingAliens).toString();
   }
   
   //função de game over
@@ -733,10 +801,10 @@
     if(gameStatus === 'win'){
       gameOverMessage.text = "TERRA SALVA!";
       gameOverMessage.color = BLUE;
-      if (bossStatus > 0) {
-        gameOverMessage.text = "CHEFÃO DESTRUIDO!";
-        gameOverMessage.color = GREEN;
-      }
+      // if (bossStatus > 0) {
+      //   gameOverMessage.text = "CHEFÃO DESTRUIDO!";
+      //   gameOverMessage.color = GREEN;
+      // }
     } else {
       if(statusData.earth.life === statusData.earth.count) {
         gameOverMessage.text = "TERRA DESTRUIDA!";
@@ -1010,9 +1078,9 @@
         ctx.globalAlpha = spr.opacity;
         // para garantir que a imagem do fundo preencha completamente o canvas
         if (spr.spriteType === 'background') {
-          preencherTela(spr.img);
+          // preencherTela(spr.img);
         } else {
-          ctx.drawImage(spr.img,spr.sourceX,spr.sourceY,spr.width,spr.height,Math.floor(spr.x),Math.floor(spr.y),spr.ratioX*spr.width,spr.ratioY*spr.height); 
+          ctx.drawImage(spr.img,spr.sourceX,spr.sourceY,spr.width,spr.height,Math.floor(spr.x),Math.floor(spr.y),spr.ratioX*spr.width,spr.ratioY*spr.height);
         }
         
       }
