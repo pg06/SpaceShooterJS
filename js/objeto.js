@@ -19,6 +19,7 @@ var Sprite = function(sourceX,sourceY,width,height,x,y){
   this.ratioY = 1;
   // Opacidade da imagem
   this.opacity = 1;
+  this.realOpacity = this.opacity;
   // Opacidade conforme o tempo passa
   this.fade = false;
   // Configurar uma imagem
@@ -59,9 +60,11 @@ var Alien = function(sourceX,sourceY,width,height,x,y){
   this.CRAZY = 3;
   this.type = 'minion';
   this.spriteType = 'alien';
-  this.life = 3;
+  this.originalLife = 3;
+  this.life = this.originalLife;
   this.state = this.NORMAL;
   this.mvStyle = this.NORMAL;
+  this.index = 0;
 }
 
 var PowerUp = function(sourceX,sourceY,width,height,x,y){
