@@ -551,7 +551,7 @@
     function checkEndGame() {
       // Verifica se a quantidade de aliens abatidos é igual
       // a quantidade de aliens necessária para vencer
-      if (parseInt(alienCount) === aliensCountToWin) {
+      if (parseInt(alienCount) >= aliensCountToWin) {
         gameState = OVER;
         gameStatus = 'win';
         for(var k in aliens){
@@ -559,7 +559,7 @@
           destroyAlien(alienk);
         }
       }
-      if (statusData.earth.count === statusData.earth.life || statusData.spaceship.count === statusData.spaceship.life) {
+      if (statusData.earth.count >= statusData.earth.life || statusData.spaceship.count >= statusData.spaceship.life) {
         gameState = OVER;
         gameStatus = 'lose';
       }
@@ -792,8 +792,8 @@
     } else {
       scoreMessage.color = RED;
     }
-    scoreMessage.text = "Vidas: " + (shipLife).toString();
-    scoreMessage.text+= " - Invasores: " + (missingAliens).toString();
+    scoreMessage.text = "VIDAS: " + (shipLife).toString();
+    scoreMessage.text+= " - INVASORES: " + (missingAliens).toString();
   }
   
   //função de game over
@@ -802,17 +802,17 @@
       gameOverMessage.text = "TERRA SALVA!";
       gameOverMessage.color = BLUE;
       // if (bossStatus > 0) {
-      //   gameOverMessage.text = "CHEFÃO DESTRUIDO!";
+      //   gameOverMessage.text = "CHEFAO DESTRUIDO!";
       //   gameOverMessage.color = GREEN;
       // }
     } else {
-      if(statusData.earth.life === statusData.earth.count) {
+      if(statusData.earth.life <= statusData.earth.count) {
         gameOverMessage.text = "TERRA DESTRUIDA!";
       } else {
         gameOverMessage.text = "NAVE DESTRUIDA!";
       }
       if (bossStatus === -1) {
-        gameOverMessage.text = "CHEFÃO DESTRUIU A TERRA!";  
+        gameOverMessage.text = "CHEFAO DESTRUIU A TERRA!";  
       }
     }
     gameOverMessage.visible = true;
