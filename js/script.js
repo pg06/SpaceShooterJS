@@ -43,11 +43,14 @@
   var RED = "#F00", YELLOW = "#FF0", GREEN = "#0F0", BLUE = "#00F";
   var missileType = 'default';
   var powerUpFrequency = 0;
-  var bossFrequency = 0;
+  var BossFrequency = 0;
+  var MiniBossFrequency = 0;
+  var enableAlienCreation = true;
   var alienType = 'default';
   var gameStatus = 'lose';
   var shootCount = 0;
   var alienCount = 0;
+  var alienDestroyCount = 0;
   var aliensCountToWin = 50;
   var mvHorizontal = 3;
   var mvVertical = 2;
@@ -61,6 +64,7 @@
   var stopBgAnimation = false;
   var invencibleStatusCount;
   var refreshPage = false;
+  var isStart = true;
 
   //sprites
   //imagem
@@ -97,7 +101,7 @@
   sprites.push(defender);
   
   //mensagem da tela inicial
-  var startMessage = new ObjectMessage(cnv.height/2,"PRESSIONE ENTER","#f00");
+  var startMessage = new ObjectMessage(3*cnv.height/4,"PRESSIONE ENTER","#f00");
   messages.push(startMessage);
   
   //mensagem de pausa
@@ -111,25 +115,33 @@
   messages.push(gameOverMessage);
   
   //placar
-  var scoreMessage = new ObjectMessage(10,"","#0f0");
-  scoreMessage.font = "normal bold 15px emulogic";
+  var scoreMessage = new ObjectMessage(0,"","#0f0");
+  scoreMessage.font = "normal bold 12px emulogic";
   scoreMessage.textAlign = 'left';
+  var scoreMessageExtra = new ObjectMessage(0,"","#0f0");
+  scoreMessageExtra.font = "normal bold 12px emulogic";
+  scoreMessageExtra.textAlign = 'center';
   updateScore();
+  messages.push(scoreMessageExtra);
   messages.push(scoreMessage);
 
   // Mensagens do Menu
   var menuMessageTitle = new ObjectMessage(menuX+60,"MENU","#FFF");
   menuMessageTitle.font = "15px emulogic";
   menuMessages.push(menuMessageTitle);
-  var menuMessageSound = new ObjectMessage(menuX+115,"SOM LIG","#EEE");
+  var menuMessageSound = new ObjectMessage(menuX+110,"INFO","#EEE");
+  menuMessageSound.font = "12px emulogic";
+  menuMessageSound.actionType = 'info';
+  menuMessages.push(menuMessageSound);
+  var menuMessageSound = new ObjectMessage(menuX+145,"SOM LIG","#EEE");
   menuMessageSound.font = "12px emulogic";
   menuMessageSound.actionType = 'sound';
   menuMessages.push(menuMessageSound);
-  var menuMessageStyles = new ObjectMessage(menuX+160,"NAVES","#EEE");
+  var menuMessageStyles = new ObjectMessage(menuX+180,"NAVES","#EEE");
   menuMessageStyles.font = "12px emulogic";
   menuMessageStyles.actionType = 'ships';
   menuMessages.push(menuMessageStyles);
-  var menuMessageAbout = new ObjectMessage(menuX+205,"SOBRE","#EEE");
+  var menuMessageAbout = new ObjectMessage(menuX+215,"SOBRE","#EEE");
   menuMessageAbout.font = "12px emulogic";
   menuMessageAbout.actionType = 'about';
   menuMessages.push(menuMessageAbout);
@@ -140,7 +152,8 @@
   var ENTER = 13, SPACE = 32, SHIFT = 15, ESC = 27, BACKSPACE = 8;
   
   //ações
-  var mvLeft = mvRight = mvUp = mvDown = shoot = shootAlien = spaceIsDown = confirmESC = false;
+  var mvLeft = mvRight = mvUp = mvDown = shoot = spaceIsDown = confirmESC = false;
+  var shootAlien = {};
   
   //estados do jogo
   var LOADING = 0, PLAYING = 1, PAUSED = 2, OVER = 3;
@@ -226,15 +239,21 @@
       case ENTER:
         direction = [0,0];
         e.preventDefault();
+        if (isStart) {
+          isStart = false;
+        }
         break;
       case BACKSPACE:
       case ESC:
         e.preventDefault();
-        if (menuType !== 'default') {
+        if (menuType !== 'default' && !isStart) {
           confirmESC = false;
-          menuType = 'default';  
+          menuType = 'default';
         } else {
           confirmESC = true;
+        }
+        if (isStart) {
+          isStart = false;
         }
         break;
       case SPACE:
@@ -272,17 +291,23 @@
         if(gameState !== OVER){
           if (startMessage.visible) {
             gameState = PLAYING;
-            requestAnimationFrame(drawImagePattern);
+            isStart = false;
             startMessage.visible = false;
+            requestAnimationFrame(drawImagePattern);
           } else {
             if (gameState === PLAYING) {
               gameState = PAUSED;
+              menuType = 'default';
               isMenu = true;
+            } else if (gameState === PAUSED && isStart) {
+              isStart = false;
+              gameState = PLAYING;
+              requestAnimationFrame(drawImagePattern);
             }
           }
-          
         }
         break;
+      case BACKSPACE:
       case ESC:
         if(gameState !== OVER){
           if(gameState !== PLAYING && confirmESC){
@@ -293,6 +318,7 @@
             pausedMessage.visible = false;
           } else {
             gameState = PAUSED;
+            menuType = 'default';
             isMenu = true;
             pausedMessage.visible = true;
           }
@@ -355,9 +381,15 @@
       case PAUSED:
         if (!startMessage.visible) {
           extra = 'menu';
+          isMenu = true;
           stopBgAnimation = true;
         }
         break;
+    }
+    if (isStart) {
+      isMenu = true;
+      extra = 'menu';
+      checkNextMenu([0,0]);
     }
     render(extra);
   }
@@ -438,24 +470,30 @@
     }
 
     //criação do alien, caso o timer se iguale à frequência
-    if(alienTimer === alienFrequency){
-      makeAlien(alienType);
+    if(alienTimer >= alienFrequency && alienDestroyCount < 50){
       alienTimer = 0;
-      bossFrequency++;
-      if (!(bossFrequency % 10)) {
+      if (MiniBossFrequency >= 0) {
+        MiniBossFrequency++;
+      }
+      if (MiniBossFrequency >= 8) {
         alienType = 'miniboss';
+        BossFrequency++;
+        MiniBossFrequency = 0;
       }
-      if (!(bossFrequency % 100)) {
+      if (BossFrequency >= 4) {
         alienType = 'boss';
+        MiniBossFrequency = -1;
+        BossFrequency = -1;
       }
+      makeAlien(alienType);
       //ajuste na frequência de criação de aliens
-      if(alienFrequency > 2){
-        alienFrequency--;
-      }
+      // if(alienFrequency > 2){
+      //   alienFrequency--;
+      // }
     }
     function fadeShip(ship) {
       if (ship.fade && ship.opacity < 0.75) {
-        ship.opacity = 1;
+        ship.opacity = ship.realOpacity;
         ship.fade = false;
       }
     }
@@ -465,10 +503,13 @@
       if(alien.state !== alien.EXPLODED){
         alien.y += alien.vy;
         // gerar tiros do alien
-        shootAlien++;
-          if (shootAlien > 60) {
-            fireMissile('default',alien);
-            shootAlien = 0;
+        if (typeof shootAlien[alien.index] === 'undefined') {
+          shootAlien[alien.index] = 0;
+        }
+        shootAlien[alien.index]++;
+        if (shootAlien[alien.index] >= 90) {
+          fireMissile('default',alien);
+          shootAlien[alien.index] = 0;
         }
         // fazer efeito ao receber tiro
         fadeShip(alien);
@@ -486,7 +527,7 @@
         // destroi o alien só deletando os sprites
         destroyAlien(alien,'direct');
         updateScore();
-        if(statusData.earth.life == statusData.earth.count){
+        if(statusData.earth.life <= statusData.earth.count){
           gameState = OVER;
         }
       }
@@ -495,7 +536,7 @@
       if(alien.spriteType !== 'explosion' && collide(alien,defender)){
         statusData.spaceship.count += statusData.spaceship.life;
         destroyAlien(alien);
-        if (statusData.spaceship.count === statusData.spaceship.life) {
+        if (statusData.spaceship.life <= statusData.spaceship.count) {
           removeObjects(defender,sprites);
           gameState = OVER;
         }
@@ -508,8 +549,13 @@
           if(missile.origin === 'defender' && collide(missile,alien)) {
             alien.life = alien.life - missile.power;
             if (alien.life <= 0) {
+              alienDestroyCount+=alien.originalLife/3;
+              if (alien.type === 'boss' && aliensCountToWin - alienDestroyCount <= 0) {
+                BossFrequency = -2;
+                gameState = OVER;
+                gameStatus = 'win';
+              }
               destroyAlien(alien);
-              alienCount++;
             } else {
               alien.fade = true;
             }
@@ -539,6 +585,8 @@
       }
     }//fim da movimentação dos aliens
     
+    // Adicionado modo invencível logo
+    // após ser atingido por um tiro (handicap)
     if (invencibleStatusCount) {
       invencibleStatusCount++;
       fadeShip(defender);
@@ -547,12 +595,11 @@
         defender.status = 'default';
       }
     }
-    
 
     function checkEndGame() {
       // Verifica se a quantidade de aliens abatidos é igual
       // a quantidade de aliens necessária para vencer
-      if (parseInt(alienCount) >= aliensCountToWin) {
+      if (alienDestroyCount >= aliensCountToWin) {
         gameState = OVER;
         gameStatus = 'win';
         for(var k in aliens){
@@ -575,7 +622,7 @@
         absorvPowerUp(powerUp);
       }
 
-      if(powerUp.y > cnv.height + powerUp.height || powerUpFrequency > 100){
+      if(powerUp.y > cnv.height + powerUp.height || powerUpFrequency > 120){
         removeObjects(powerUp,powerUps);
         removeObjects(powerUp,sprites);
       }
@@ -649,7 +696,9 @@
   
   //criação de aliens
   function makeAlien(alienType_){
+    if (!enableAlienCreation) return false;
     var alienT = alienType_ || 'default';
+    alienCount++;
     //cria um valor aleatório entre 0 e 7 => largura do canvas / largura do alien
     //divide o canvas em 8 colunas para o posicionamento aleatório do alien
     var alienTypesListIndexes = [0,1,2,3];
@@ -663,7 +712,7 @@
       alien.sourceY = 50;
       alien.height = 50;
       alien.width = 50;
-      alien.life = 10;
+      alien.originalLife = 9;
       alienType = 'default';
     } else if (alienT === 'boss') {
       var alienSourceX = alienTypesListIndexes[Math.floor(Math.random() * 4)]*50;
@@ -671,12 +720,18 @@
       alien.sourceY = 50;
       alien.height = 50;
       alien.width = 50;
-      alien.life = 50;
-      alien.opacity = .3;
+      alien.originalLife = 30;
+      alien.realOpacity = .5;
       alienType = 'default';
+      // if (alienDestroyCount >= 45) {
+      //   enableAlienCreation = false;
+      // }
     }
+    alien.life = alien.originalLife;
+    alien.opacity = alien.realOpacity;
     alien.type = alienT;
     alien.vy = 1;
+    alien.index = alienCount;
     
     //otimização do alien
     if(Math.floor(Math.random() * 11) > 7){
@@ -784,37 +839,43 @@
       hits = "0" + hits;
     }
     // scoreMessage.text = "PONTOS: " + hits " - ACC: " + acuracy + "%";
-    var missingAliens = statusData.earth.count;
+    var missingAliens = statusData.earth.life - statusData.earth.count;
+    if (missingAliens < 0) missingAliens = 0;
     var shipLife = statusData.spaceship.life - statusData.spaceship.count;
-    if (missingAliens === 0 && shipLife === 3) {
+    if (shipLife < 0) shipLife = 0;
+    var alienHits = aliensCountToWin - alienDestroyCount;
+    if (alienHits < 0) alienHits = 0;
+    if (missingAliens === 3 && shipLife === 3) {
       scoreMessage.color = GREEN;
-    } else if (missingAliens === 1 || shipLife === 2) {
+    } else if (missingAliens >= 2 && shipLife >= 2) {
       scoreMessage.color = YELLOW;
     } else {
       scoreMessage.color = RED;
     }
-    scoreMessage.text = "VIDAS: " + (shipLife).toString();
-    scoreMessage.text+= " - INVASORES: " + (missingAliens).toString();
+    scoreMessage.text = "VIDA: " + (shipLife).toString();
+    scoreMessage.text+= "                 ESCUDO: " + (missingAliens).toString();
+    scoreMessageExtra.text = "- ALIENS: " + (alienHits).toString() + " - ";
   }
   
   //função de game over
   function endGame(){
+    updateScore();
     if(gameStatus === 'win'){
       gameOverMessage.text = "TERRA SALVA!";
       gameOverMessage.color = BLUE;
-      // if (bossStatus > 0) {
-      //   gameOverMessage.text = "CHEFAO DESTRUIDO!";
-      //   gameOverMessage.color = GREEN;
-      // }
+      if (BossFrequency === -2) {
+        gameOverMessage.text = "CHEFAO DESTRUIDO!";
+        gameOverMessage.color = GREEN;
+      }
     } else {
       if(statusData.earth.life <= statusData.earth.count) {
         gameOverMessage.text = "TERRA DESTRUIDA!";
       } else {
         gameOverMessage.text = "NAVE DESTRUIDA!";
       }
-      if (bossStatus === -1) {
-        gameOverMessage.text = "CHEFAO DESTRUIU A TERRA!";  
-      }
+      // if (bossStatus === -1) {
+      //   gameOverMessage.text = "CHEFAO DESTRUIU A TERRA!";  
+      // }
     }
     gameOverMessage.visible = true;
     // recarrega a página inteira usando o comando: `location.reaload();`
@@ -924,14 +985,7 @@
       ctx.fillRect(menuX+10,menuY+10,menuWidth-20,menuHeight-20);
       ctx.fillStyle = "#131313";
       ctx.fillRect(menuX+15,menuY+15,menuWidth-30,menuHeight-30);
-    } else if (layoutType === 'ships') {
-      ctx.fillStyle = "#151515";
-      ctx.fillRect(newMenuX,newMenuY,menuHeight,menuWidth);
-      ctx.fillStyle = "white";
-      ctx.fillRect(newMenuX+10,newMenuY+10,menuHeight-20,menuWidth-20);
-      ctx.fillStyle = "#131313";
-      ctx.fillRect(newMenuX+15,newMenuY+15,menuHeight-30,menuWidth-30);
-    } else if (layoutType === 'about') {
+    } else if (layoutType === 'about' || layoutType === 'ships' || layoutType === 'info') {
       ctx.fillStyle = "#151515";
       ctx.fillRect(newMenuX,newMenuY,menuHeight,menuWidth);
       ctx.fillStyle = "white";
@@ -950,6 +1004,15 @@
     // -->> Essa fonte não permite acentos <<--
     // criando a janela do menu
     renderMenuLayout(MenuType);
+    function createMessageAbout(x_,y_,text_,color_,font_,textAlign_) {
+      var messageAbout = new ObjectMessage(y_,text_,color_);
+      messageAbout.font = font_ || "12px emulogic";
+      if (textAlign_)
+        messageAbout.textAlign = textAlign_;
+      if (x_)
+        messageAbout.x = x_;
+      loopMessages.push(messageAbout);
+    }
     if (MenuType === 'default') {
       loopMessages = menuMessages;
     } else if (MenuType === 'ships') {
@@ -1003,6 +1066,30 @@
       messageAbout.textAlign = "left";
       messageAbout.x = newMenuX+25;
       loopMessages.push(messageAbout);
+    } else if (MenuType === 'info') {
+      // adicionando conteúdo na janela
+      // createMessageAbout(x_,y_,text_,color_,font_,textAlign_)
+      createMessageAbout(false,newMenuY+20,"INFO","#EEE",false,false);
+      var messageFont = "8px emulogic";
+      var messageAlign = "left";
+      createMessageAbout(newMenuX+25,newMenuY+50,
+        "- Mover: setas","#EEE",messageFont,messageAlign);
+      createMessageAbout(newMenuX+25,newMenuY+60,
+        "  Atirar: Barra de espaco","#EEE",messageFont,messageAlign);
+      createMessageAbout(newMenuX+25,newMenuY+70,
+        "  Menu: ESC ou ENTER","#EEE",messageFont,messageAlign);
+      createMessageAbout(newMenuX+25,newMenuY+90,
+        "- ESCUDO: aliens que","#EEE",messageFont,messageAlign);
+      createMessageAbout(newMenuX+25,newMenuY+100,
+        "  a terra aguenta.","#EEE",messageFont,messageAlign);
+      createMessageAbout(newMenuX+25,newMenuY+120,
+        "- VIDA: tiros que","#EEE",messageFont,messageAlign);
+      createMessageAbout(newMenuX+25,newMenuY+130,
+        "  a nave aguenta.","#EEE",messageFont,messageAlign);
+      createMessageAbout(newMenuX+25,newMenuY+155,
+        "* (S) vermelho - ESPECIAL","#EEE",messageFont,messageAlign);
+      createMessageAbout(newMenuX+25,newMenuY+165,
+        "  modifica o tiro.","#EEE",messageFont,messageAlign);
     }
     menuOptions[MenuType] = loopSprites.length === 0 ? loopMessages : loopSprites;
 
@@ -1019,6 +1106,9 @@
           case 'ships':
             menuType = 'ships';
             break;
+          case 'info':
+            menuType = 'info';
+            break;
           case 'about':
             menuType = 'about';
             break;
@@ -1034,19 +1124,8 @@
         spr.img = img;
       }
       if (spr.outline) {
-        // var dArr = [-1,-1, 0,-1, 1,-1, -1,0, 1,0, -1,1, 0,1, 1,1], // offset array
-        // s = 2,  // scale
-        // i = 0;  // iterator
-        // for(; i < dArr.length; i += 2) 
-        //   ctx.drawImage(spr.img,spr.sourceX,spr.sourceY,spr.width,spr.height,spr.x + dArr[i]*s,spr.y + dArr[i+1]*s,spr.ratioX*spr.width,spr.ratioY*spr.height);
-
-        // fill with color
-        // ctx.globalCompositeOperation = "source-in";
         ctx.fillStyle = "#333";
         ctx.fillRect(spr.x,spr.y,spr.width,spr.height);
-
-        // draw original image in normal mode
-        // ctx.globalCompositeOperation = "source-over";
       }
       ctx.drawImage(spr.img,spr.sourceX,spr.sourceY,spr.width,spr.height,Math.floor(spr.x),Math.floor(spr.y),spr.ratioX*spr.width,spr.ratioY*spr.height);
     }
