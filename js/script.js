@@ -1081,11 +1081,11 @@
       createMessageAbout(newMenuX+25,newMenuY+90,
         "- ESCUDO: aliens que","#EEE",messageFont,messageAlign);
       createMessageAbout(newMenuX+25,newMenuY+100,
-        "  a terra aguenta.","#EEE",messageFont,messageAlign);
+        "  a terra suporta.","#EEE",messageFont,messageAlign);
       createMessageAbout(newMenuX+25,newMenuY+120,
         "- VIDA: tiros que","#EEE",messageFont,messageAlign);
       createMessageAbout(newMenuX+25,newMenuY+130,
-        "  a nave aguenta.","#EEE",messageFont,messageAlign);
+        "  a nave suporta.","#EEE",messageFont,messageAlign);
       createMessageAbout(newMenuX+25,newMenuY+155,
         "* (S) vermelho - ESPECIAL","#EEE",messageFont,messageAlign);
       createMessageAbout(newMenuX+25,newMenuY+165,
