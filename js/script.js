@@ -60,6 +60,7 @@
   var isMenu = false;
   var stopBgAnimation = false;
   var invencibleStatusCount;
+  var refreshPage = false;
 
   //sprites
   //imagem
@@ -819,9 +820,15 @@
     // recarrega a página inteira usando o comando: `location.reaload();`
     // utilizando a função `setTimeout()` que depois determinado tempo
     // executará a função, nesse caso 3000ms
-    setTimeout(function(){
-      location.reload();
-    },3000);
+    // variavel `refreshPage` adicionada
+    // para evitar conflito com vários `setTimeout` sendo chamados
+    if (!refreshPage) {
+      setTimeout(function(){
+        refreshPage = true;
+        location.reload();
+      },3000);  
+    }
+    
   }
   
   //efeitos sonoros do jogo
