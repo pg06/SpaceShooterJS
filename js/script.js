@@ -966,7 +966,7 @@
   function gameSounds() {
     if (toggleSound === 'on') {
       if (!document.getElementById('musicTheme')) {
-        document.getElementsByTagName("body")[0].insertAdjacentHTML('beforeend','<audio id="musicTheme" src="sound/music.mp3" type="audio/mpeg" loop autoplay></audio>');
+        document.getElementsByTagName("body")[0].insertAdjacentHTML('beforeend','<audio id="musicTheme" src="sound/music.ogg" type="audio/mpeg" loop autoplay></audio>');
       }
     }
     else if (toggleSound === 'off') {
