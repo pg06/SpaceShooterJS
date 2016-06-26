@@ -23,12 +23,6 @@
   var menuMessages = [];
   var menuMessagesSelection = [];
   var menuOptions = {default: []};
-  // coordenadas padrões da nave principal (Defender)
-  var defaultDefender = {
-    sourceX: 0, sourceY: 0, 
-    sourceXLeft: 227, sourceYLeft: 0,
-    sourceXRight: 257, sourceYRight: 0
-  };
   
   //variáveis úteis
   var alienFrequency = 100;
@@ -65,6 +59,7 @@
   var invencibleStatusCount;
   var refreshPage = false;
   var isStart = true;
+  var mobileCheck = true;
 
   //sprites
   //imagem
@@ -99,6 +94,12 @@
   var defender = new Sprite(0,0,30,43,185,450);
   defender.spriteType = 'defender';
   sprites.push(defender);
+  // coordenadas padrões da nave principal (Defender)
+  var defaultDefender = {
+    sourceX: 0, sourceY: 0, 
+    sourceXLeft: 227, sourceYLeft: 0,
+    sourceXRight: 257, sourceYRight: 0
+  };
   
   //mensagem da tela inicial
   var startMessage = new ObjectMessage(3*cnv.height/4,"PRESSIONE ENTER","#f00");
@@ -126,25 +127,33 @@
   messages.push(scoreMessage);
 
   // Mensagens do Menu
-  var menuMessageTitle = new ObjectMessage(menuX+60,"MENU","#FFF");
-  menuMessageTitle.font = "15px emulogic";
-  menuMessages.push(menuMessageTitle);
-  var menuMessageSound = new ObjectMessage(menuX+110,"INFO","#EEE");
-  menuMessageSound.font = "12px emulogic";
-  menuMessageSound.actionType = 'info';
-  menuMessages.push(menuMessageSound);
-  var menuMessageSound = new ObjectMessage(menuX+145,"SOM LIG","#EEE");
-  menuMessageSound.font = "12px emulogic";
-  menuMessageSound.actionType = 'sound';
-  menuMessages.push(menuMessageSound);
-  var menuMessageStyles = new ObjectMessage(menuX+180,"NAVES","#EEE");
-  menuMessageStyles.font = "12px emulogic";
-  menuMessageStyles.actionType = 'ships';
-  menuMessages.push(menuMessageStyles);
-  var menuMessageAbout = new ObjectMessage(menuX+215,"SOBRE","#EEE");
-  menuMessageAbout.font = "12px emulogic";
-  menuMessageAbout.actionType = 'about';
-  menuMessages.push(menuMessageAbout);
+  var menuBoxMessages = [
+    {y:menuX+60, text:"MENU", color:"#FFF", actionType:false, font:"15px emulogic"},
+    {y:menuX+110, text:"INFO", color:"#EEE", actionType:"info", font:"12px emulogic"},
+    {y:menuX+145, text:"SOM LIG", color:"#EEE", actionType:"sound", font:"12px emulogic"},
+    {y:menuX+180, text:"NAVES", color:"#EEE", actionType:"ships", font:"12px emulogic"},
+    {y:menuX+215, text:"SOBRE", color:"#EEE", actionType:"about", font:"12px emulogic"}
+  ];
+  pushTextObjToArray(menuBoxMessages,menuMessages)
+  function pushTextObjToArray(listObjects,array) {
+    for (var i in listObjects) {
+      var msgObj = listObjects[i];
+      var messageObj = new ObjectMessage(msgObj.y,msgObj.text,msgObj.color);
+      messageObj.font = msgObj.font;
+      if ('actionType' in msgObj && msgObj.actionType) {
+        messageObj.actionType = msgObj.actionType;
+        if ('action' in msgObj && msgObj.action) {
+          messageObj.actionType = msgObj.action;
+        }
+      }
+      if ('textAlign' in msgObj && msgObj.textAlign)
+        messageObj.textAlign = msgObj.textAlign;
+      if ('x' in msgObj && msgObj.x)
+        messageObj.x = msgObj.x;
+      array.push(messageObj);
+    }
+  }
+  // Selecionar a primeira opção do menu
   menuMessages[1].color = YELLOW;
   
   //entradas
@@ -159,52 +168,49 @@
   var LOADING = 0, PLAYING = 1, PAUSED = 2, OVER = 3;
   var gameState = LOADING;
 
-  var menuMessagesSelectionObj = {};
+  // Fazer um loop entre as opções do menu
+  // Váriavel para armazenar index do opcão seleciona por menu 
+  var selectOption = {};
   function checkNextMenu(direction) {
     var limitMin = menuType === 'default' ? 1 : 0;
-    if (typeof menuMessagesSelectionObj[menuType] === 'undefined') {
-      menuMessagesSelectionObj[menuType] = limitMin;
-    }
-    menuMessagesSelectionObj[menuType] = menuMessagesSelectionObj[menuType];
+    if (!(menuType in selectOption))
+      selectOption[menuType] = limitMin;
     if (direction.length > 0) {
+      // escolher qual o index do array direção usaremos
       var dimension = menuType === 'default' ? 0 : 1;
+      // variável responsável pelas opções que entrarão no loop
       var loopAction = menuOptions[menuType];
-      menuMessagesSelectionObj[menuType] += direction[dimension] > 1 ? 0 : direction[dimension];
+      selectOption[menuType] += direction[dimension] > 1 ? 0 : direction[dimension];
       if (direction[dimension]) {
-        if (menuMessagesSelectionObj[menuType] === menuOptions[menuType].length) {
-          menuMessagesSelectionObj[menuType] = limitMin;
-        } else if (menuMessagesSelectionObj[menuType] < limitMin) {
-          menuMessagesSelectionObj[menuType] = menuOptions[menuType].length-1;
+        if (selectOption[menuType] === menuOptions[menuType].length) {
+          selectOption[menuType] = limitMin;
+        } else if (selectOption[menuType] < limitMin) {
+          selectOption[menuType] = menuOptions[menuType].length-1;
         }
       }
       for (var i in menuOptions[menuType]) {
         if (menuType === 'default') {
-          menuOptions[menuType][i].color = i == menuMessagesSelectionObj[menuType] ? YELLOW : "white";
-          if (!direction[dimension] && i == menuMessagesSelectionObj[menuType]) {
+          menuOptions[menuType][i].color = i == selectOption[menuType] ? YELLOW : "white";
+          if (!direction[dimension] && i == selectOption[menuType]) {
             var changeText = ['LIG', 'DES'];
             changeText = menuOptions[menuType][i].text.indexOf('LIG') > -1 ? ['LIG','DES'] : ['DES','LIG']
             menuOptions[menuType][i].text = menuOptions[menuType][i].text.replace(changeText[0], changeText[1]);
             menuOptions[menuType][i].action = true;
           }
         } else if (menuType === 'ships') {
-          menuOptions[menuType][i].outline = i == menuMessagesSelectionObj[menuType] ? true : false;
-          if (!direction[dimension] && i == menuMessagesSelectionObj[menuType]) {
+          menuOptions[menuType][i].outline = i == selectOption[menuType] ? true : false;
+          if (!direction[dimension] && i == selectOption[menuType]) {
             // Mudar o sprite da nave padrão
-            defaultDefender.sourceX = menuOptions[menuType][i].sourceX;
-            defaultDefender.sourceY = menuOptions[menuType][i].sourceY;
-            defaultDefender.sourceXLeft = menuOptions[menuType][i].sourceXLeft;
-            defaultDefender.sourceYLeft = menuOptions[menuType][i].sourceYLeft;
-            defaultDefender.sourceXRight = menuOptions[menuType][i].sourceXRight;
-            defaultDefender.sourceYRight = menuOptions[menuType][i].sourceYRight;
-            defender.sourceX = menuOptions[menuType][i].sourceX;
-            defender.sourceY = menuOptions[menuType][i].sourceY;
-            defender.sourceXLeft = menuOptions[menuType][i].sourceXLeft;
-            defender.sourceYLeft = menuOptions[menuType][i].sourceYLeft;
-            defender.sourceXRight = menuOptions[menuType][i].sourceXRight;
-            defender.sourceYRight = menuOptions[menuType][i].sourceYRight;
+            changeDefenderSprite(menuOptions[menuType][i]);
           }
         }
       }
+    }
+  }
+  function changeDefenderSprite(newDefender) {
+    for (var key in defaultDefender) {
+      defaultDefender[key] = newDefender[key];
+      defender[key] = newDefender[key];
     }
   }
   // Verificação das teclas pressionadas no jogo
@@ -329,9 +335,100 @@
         spaceIsDown = false;
     }
   },false);
-  
-  
-  
+
+  cnv.addEventListener('touchstart',function(e){
+    if (e.touches[0].pageY < 150) {
+      if(gameState !== OVER){
+        if (startMessage.visible || gameState !== PLAYING) {
+          gameState = PLAYING;
+          isStart = false;
+          startMessage.visible = false;
+          requestAnimationFrame(drawImagePattern);
+        } else {
+          if (gameState === PLAYING) {
+            gameState = PAUSED;
+            menuType = 'touch';
+            isMenu = true;
+          } else if (gameState === PAUSED && isStart) {
+            isStart = false;
+            gameState = PLAYING;
+            requestAnimationFrame(drawImagePattern);
+          }
+        }
+      }
+    }
+    if (gameState === PAUSED) {
+      if(gameState !== OVER){
+        if (startMessage.visible) {
+          gameState = PLAYING;
+          isStart = false;
+          startMessage.visible = false;
+          requestAnimationFrame(drawImagePattern);
+        } else {
+          if (gameState === PLAYING) {
+            gameState = PAUSED;
+            menuType = 'default';
+            isMenu = true;
+          } else if (gameState === PAUSED && isStart) {
+            isStart = false;
+            gameState = PLAYING;
+            requestAnimationFrame(drawImagePattern);
+          }
+        }
+      }
+    }
+  },false);
+
+  cnv.addEventListener('touchmove',function(e){
+    if (gameState === PLAYING) {
+      touchMoveSprite(e.touches,defender);
+      shootCount++;
+      if (shootCount > 10) {
+        fireMissile(missileType);
+        shootCount = 0;
+      }
+    }
+  },false);
+
+  function touchMoveSprite(touches_,sprite_) {
+    // Setar X do sprite
+    newX = touches_[0].pageX - sprite_.width;
+    if (newX < sprite_.width) {
+      newX = 0;
+    }
+    if (newX > cnv.width - sprite_.width) {
+      newX = cnv.width - sprite_.width;
+    }
+    sprite_.x = newX;
+    // Setar Y do sprite
+    newY = touches_[0].pageY - sprite_.height;
+    if (newY < sprite_.height) {
+      newY = 0;
+    }
+    if (newY > cnv.height - sprite_.height) {
+      newY = cnv.height - sprite_.height;
+    }
+    sprite_.y = newY;
+  }
+
+  function onTouch(evt) {
+    evt.preventDefault();
+    if (evt.touches.length > 1 || (evt.type == "touchend" && evt.touches.length > 0))
+      return;
+
+    var newEvt = document.createEvent("MouseEvents");
+    var type = null;
+    var touch = null;
+    switch (evt.type) {
+      case "touchstart":    type = "mousedown";    touch = evt.changedTouches[0];break;
+      case "touchmove":        type = "mousemove";    touch = evt.changedTouches[0];break;
+      case "touchend":        type = "mouseup";    touch = evt.changedTouches[0];break;
+    }
+    newEvt.initMouseEvent(type, true, true, evt.originalTarget.ownerDocument.defaultView, 0,
+      touch.screenX, touch.screenY, touch.clientX, touch.clientY,
+      evt.ctrlKey, evt.altKey, evt.shirtKey, evt.metaKey, 0, null);
+    evt.originalTarget.dispatchEvent(newEvt);
+  }
   //FUNÇÕES =================================================================>
   function loadHandler(){
     loadedAssets++;
@@ -339,7 +436,9 @@
       this.removeEventListener('load',loadHandler,false);
       //inicia o jogo
       gameState = PAUSED;
-      stopBgAnimation = true;
+      setTimeout(function() {
+        stopBgAnimation = true;
+      }, 1)
     }
   }
   var lastRepaintTime=window.performance.now();
@@ -357,6 +456,12 @@
       ctxBG.translate(0,translateY);
       requestAnimationFrame(drawImagePattern);
     }
+  }
+
+  window.mobileAndTabletcheck = function() {
+    var check = false;
+    (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino|android|ipad|playbook|silk/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4)))check = true})(navigator.userAgent||navigator.vendor||window.opera);
+    return check;
   }
 
   function loop(){
@@ -379,6 +484,10 @@
         endGame();
         break;
       case PAUSED:
+        if (mobileCheck && mobileAndTabletcheck()) {
+          mobileCheck = false;
+          menuType = 'touch';
+        }
         if (!startMessage.visible) {
           extra = 'menu';
           isMenu = true;
@@ -985,7 +1094,7 @@
       ctx.fillRect(menuX+10,menuY+10,menuWidth-20,menuHeight-20);
       ctx.fillStyle = "#131313";
       ctx.fillRect(menuX+15,menuY+15,menuWidth-30,menuHeight-30);
-    } else if (layoutType === 'about' || layoutType === 'ships' || layoutType === 'info') {
+    } else if (layoutType === 'about' || layoutType === 'ships' || layoutType === 'info' || layoutType === 'touch') {
       ctx.fillStyle = "#151515";
       ctx.fillRect(newMenuX,newMenuY,menuHeight,menuWidth);
       ctx.fillStyle = "white";
@@ -1004,15 +1113,7 @@
     // -->> Essa fonte não permite acentos <<--
     // criando a janela do menu
     renderMenuLayout(MenuType);
-    function createMessageAbout(x_,y_,text_,color_,font_,textAlign_) {
-      var messageAbout = new ObjectMessage(y_,text_,color_);
-      messageAbout.font = font_ || "12px emulogic";
-      if (textAlign_)
-        messageAbout.textAlign = textAlign_;
-      if (x_)
-        messageAbout.x = x_;
-      loopMessages.push(messageAbout);
-    }
+
     if (MenuType === 'default') {
       loopMessages = menuMessages;
     } else if (MenuType === 'ships') {
@@ -1048,48 +1149,67 @@
     } else if (MenuType === 'about') {
       loopMessages = [];
       // adicionando conteúdo na janela
-      var messageAbout = new ObjectMessage(newMenuY+20,"COLABORADORES","#EEE");
-      messageAbout.font = "12px emulogic";
-      loopMessages.push(messageAbout);
-      var messageAbout = new ObjectMessage(newMenuY+65,"BRUNA LIMA","#EEE");
-      messageAbout.font = "12px emulogic";
-      messageAbout.textAlign = "left";
-      messageAbout.x = newMenuX+25;
-      loopMessages.push(messageAbout);
-      var messageAbout = new ObjectMessage(newMenuY+105,"PAULO MELO","#EEE");
-      messageAbout.font = "12px emulogic";
-      messageAbout.textAlign = "left";
-      messageAbout.x = newMenuX+25;
-      loopMessages.push(messageAbout);
-      var messageAbout = new ObjectMessage(newMenuY+145,"YAGO ALVES","#EEE");
-      messageAbout.font = "12px emulogic";
-      messageAbout.textAlign = "left";
-      messageAbout.x = newMenuX+25;
-      loopMessages.push(messageAbout);
+      var aboutMessages = [
+        {y:newMenuY+20, text:"COLABORADORES", color:"#EEE", align:false, x:0, font:"12px emulogic"},
+        {y:newMenuY+65, text:"BRUNA LIMA", color:"#EEE", align:'left', x:newMenuX+25, font:"12px emulogic"},
+        {y:newMenuY+105, text:"PAULO MELO", color:"#EEE", align:'left', x:newMenuX+25, font:"12px emulogic"},
+        {y:newMenuY+145, text:"YAGO ALVES", color:"#EEE", align:'left', x:newMenuX+25, font:"12px emulogic"}
+      ];
+      pushTextObjToArray(aboutMessages,loopMessages);
     } else if (MenuType === 'info') {
       // adicionando conteúdo na janela
-      // createMessageAbout(x_,y_,text_,color_,font_,textAlign_)
-      createMessageAbout(false,newMenuY+20,"INFO","#EEE",false,false);
       var messageFont = "8px emulogic";
       var messageAlign = "left";
-      createMessageAbout(newMenuX+25,newMenuY+50,
-        "- Mover: setas","#EEE",messageFont,messageAlign);
-      createMessageAbout(newMenuX+25,newMenuY+60,
-        "  Atirar: Barra de espaco","#EEE",messageFont,messageAlign);
-      createMessageAbout(newMenuX+25,newMenuY+70,
-        "  Menu: ESC ou ENTER","#EEE",messageFont,messageAlign);
-      createMessageAbout(newMenuX+25,newMenuY+90,
-        "- ESCUDO: aliens que","#EEE",messageFont,messageAlign);
-      createMessageAbout(newMenuX+25,newMenuY+100,
-        "  a terra suporta.","#EEE",messageFont,messageAlign);
-      createMessageAbout(newMenuX+25,newMenuY+120,
-        "- VIDA: tiros que","#EEE",messageFont,messageAlign);
-      createMessageAbout(newMenuX+25,newMenuY+130,
-        "  a nave suporta.","#EEE",messageFont,messageAlign);
-      createMessageAbout(newMenuX+25,newMenuY+155,
-        "* (S) vermelho - ESPECIAL","#EEE",messageFont,messageAlign);
-      createMessageAbout(newMenuX+25,newMenuY+165,
-        "  modifica o tiro.","#EEE",messageFont,messageAlign);
+      var infoMessages = [
+        {x:false,y:newMenuY+20,textAlign: false,
+          text:"INFO",color: "#EEE",font: false},
+        {x:newMenuX+25,y:newMenuY+50,textAlign: messageAlign,
+          text:"- Mover: setas",color: "#EEE",font: messageFont},
+        {x:newMenuX+25,y:newMenuY+60,textAlign: messageAlign,
+          text:"  Atirar: Barra de espaco",color: "#EEE",font: messageFont},
+        {x:newMenuX+25,y:newMenuY+70,textAlign: messageAlign,
+          text:"  Menu: ESC ou ENTER",color: "#EEE",font: messageFont},
+        {x:newMenuX+25,y:newMenuY+90,textAlign: messageAlign,
+          text:"- ESCUDO: aliens que",color: "#EEE",font: messageFont},
+        {x:newMenuX+25,y:newMenuY+100,textAlign: messageAlign,
+          text:"  a terra suporta.",color: "#EEE",font: messageFont},
+        {x:newMenuX+25,y:newMenuY+120,textAlign: messageAlign,
+          text:"- VIDA: tiros que",color: "#EEE",font: messageFont},
+        {x:newMenuX+25,y:newMenuY+130,textAlign: messageAlign,
+          text:"  a nave suporta.",color: "#EEE",font: messageFont},
+        {x:newMenuX+25,y:newMenuY+155,textAlign: messageAlign,
+          text:"* (S) vermelho - ESPECIAL",color: "#EEE",font: messageFont},
+        {x:newMenuX+25,y:newMenuY+165,textAlign: messageAlign,
+          text:"  modifica o tiro.",color: "#EEE",font: messageFont}
+      ];
+      pushTextObjToArray(infoMessages,loopMessages);
+    } else if (MenuType === 'touch') {
+      // adicionando conteúdo na janela
+      var messageFont = "8px emulogic";
+      var messageAlign = "left";
+      var infoMessages = [
+        {x:false,y:newMenuY+20,textAlign: false,
+          text:"TOUCH INFO",color: "#EEE",font: false},
+        {x:newMenuX+25,y:newMenuY+50,textAlign: messageAlign,
+          text:"- Mova a nave com toque",color: "#EEE",font: messageFont},
+        // {x:newMenuX+25,y:newMenuY+60,textAlign: messageAlign,
+        //   text:"- Aperte no MENU",color: "#EEE",font: messageFont},
+        // {x:newMenuX+25,y:newMenuY+70,textAlign: messageAlign,
+        //   text:"  para mutar ou desmutar",color: "#EEE",font: messageFont},
+        {x:newMenuX+25,y:newMenuY+90,textAlign: messageAlign,
+          text:"- ESCUDO: aliens que",color: "#EEE",font: messageFont},
+        {x:newMenuX+25,y:newMenuY+100,textAlign: messageAlign,
+          text:"  a terra suporta.",color: "#EEE",font: messageFont},
+        {x:newMenuX+25,y:newMenuY+120,textAlign: messageAlign,
+          text:"- VIDA: tiros que",color: "#EEE",font: messageFont},
+        {x:newMenuX+25,y:newMenuY+130,textAlign: messageAlign,
+          text:"  a nave suporta.",color: "#EEE",font: messageFont},
+        {x:newMenuX+25,y:newMenuY+155,textAlign: messageAlign,
+          text:"* (S) vermelho - ESPECIAL",color: "#EEE",font: messageFont},
+        {x:newMenuX+25,y:newMenuY+165,textAlign: messageAlign,
+          text:"  modifica o tiro.",color: "#EEE",font: messageFont}
+      ];
+      pushTextObjToArray(infoMessages,loopMessages);
     }
     menuOptions[MenuType] = loopSprites.length === 0 ? loopMessages : loopSprites;
 
@@ -1108,6 +1228,9 @@
             break;
           case 'info':
             menuType = 'info';
+            break;
+          case 'touch':
+            menuType = 'touch';
             break;
           case 'about':
             menuType = 'about';
@@ -1182,29 +1305,6 @@
       renderMenu(menuType);
     }
   }
-  
+
   loop();
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
 }());
