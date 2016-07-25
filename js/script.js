@@ -336,98 +336,100 @@
     }
   },false);
 
-  cnv.addEventListener('touchstart',function(e){
-    if (e.touches[0].pageY < 150) {
-      if(gameState !== OVER){
-        if (startMessage.visible || gameState !== PLAYING) {
-          gameState = PLAYING;
-          isStart = false;
-          startMessage.visible = false;
-          requestAnimationFrame(drawImagePattern);
-        } else {
-          if (gameState === PLAYING) {
-            gameState = PAUSED;
-            menuType = 'touch';
-            isMenu = true;
-          } else if (gameState === PAUSED && isStart) {
-            isStart = false;
+  if (mobileCheck && false) {
+    cnv.addEventListener('touchstart',function(e){
+      if (e.touches[0].pageY < 150) {
+        if(gameState !== OVER){
+          if (startMessage.visible || gameState !== PLAYING) {
             gameState = PLAYING;
+            isStart = false;
+            startMessage.visible = false;
             requestAnimationFrame(drawImagePattern);
+          } else {
+            if (gameState === PLAYING) {
+              gameState = PAUSED;
+              menuType = 'touch';
+              isMenu = true;
+            } else if (gameState === PAUSED && isStart) {
+              isStart = false;
+              gameState = PLAYING;
+              requestAnimationFrame(drawImagePattern);
+            }
           }
         }
       }
-    }
-    if (gameState === PAUSED) {
-      if(gameState !== OVER){
-        if (startMessage.visible) {
-          gameState = PLAYING;
-          isStart = false;
-          startMessage.visible = false;
-          requestAnimationFrame(drawImagePattern);
-        } else {
-          if (gameState === PLAYING) {
-            gameState = PAUSED;
-            menuType = 'default';
-            isMenu = true;
-          } else if (gameState === PAUSED && isStart) {
-            isStart = false;
+      if (gameState === PAUSED) {
+        if(gameState !== OVER){
+          if (startMessage.visible) {
             gameState = PLAYING;
+            isStart = false;
+            startMessage.visible = false;
             requestAnimationFrame(drawImagePattern);
+          } else {
+            if (gameState === PLAYING) {
+              gameState = PAUSED;
+              menuType = 'default';
+              isMenu = true;
+            } else if (gameState === PAUSED && isStart) {
+              isStart = false;
+              gameState = PLAYING;
+              requestAnimationFrame(drawImagePattern);
+            }
           }
         }
       }
-    }
-  },false);
+    },false);
 
-  cnv.addEventListener('touchmove',function(e){
-    if (gameState === PLAYING) {
-      touchMoveSprite(e.touches,defender);
-      shootCount++;
-      if (shootCount > 10) {
-        fireMissile(missileType);
-        shootCount = 0;
+    cnv.addEventListener('touchmove',function(e){
+      if (gameState === PLAYING) {
+        touchMoveSprite(e.touches,defender);
+        shootCount++;
+        if (shootCount > 10) {
+          fireMissile(missileType);
+          shootCount = 0;
+        }
       }
-    }
-  },false);
+    },false);
 
-  function touchMoveSprite(touches_,sprite_) {
-    // Setar X do sprite
-    newX = touches_[0].pageX - sprite_.width;
-    if (newX < sprite_.width) {
-      newX = 0;
+    function touchMoveSprite(touches_,sprite_) {
+      // Setar X do sprite
+      newX = touches_[0].pageX - sprite_.width;
+      if (newX < sprite_.width) {
+        newX = 0;
+      }
+      if (newX > cnv.width - sprite_.width) {
+        newX = cnv.width - sprite_.width;
+      }
+      sprite_.x = newX;
+      // Setar Y do sprite
+      newY = touches_[0].pageY - sprite_.height;
+      if (newY < sprite_.height) {
+        newY = 0;
+      }
+      if (newY > cnv.height - sprite_.height) {
+        newY = cnv.height - sprite_.height;
+      }
+      sprite_.y = newY;
     }
-    if (newX > cnv.width - sprite_.width) {
-      newX = cnv.width - sprite_.width;
-    }
-    sprite_.x = newX;
-    // Setar Y do sprite
-    newY = touches_[0].pageY - sprite_.height;
-    if (newY < sprite_.height) {
-      newY = 0;
-    }
-    if (newY > cnv.height - sprite_.height) {
-      newY = cnv.height - sprite_.height;
-    }
-    sprite_.y = newY;
-  }
 
-  function onTouch(evt) {
-    evt.preventDefault();
-    if (evt.touches.length > 1 || (evt.type == "touchend" && evt.touches.length > 0))
-      return;
+    function onTouch(evt) {
+      evt.preventDefault();
+      if (evt.touches.length > 1 || (evt.type == "touchend" && evt.touches.length > 0))
+        return;
 
-    var newEvt = document.createEvent("MouseEvents");
-    var type = null;
-    var touch = null;
-    switch (evt.type) {
-      case "touchstart":    type = "mousedown";    touch = evt.changedTouches[0];break;
-      case "touchmove":        type = "mousemove";    touch = evt.changedTouches[0];break;
-      case "touchend":        type = "mouseup";    touch = evt.changedTouches[0];break;
+      var newEvt = document.createEvent("MouseEvents");
+      var type = null;
+      var touch = null;
+      switch (evt.type) {
+        case "touchstart":    type = "mousedown";    touch = evt.changedTouches[0];break;
+        case "touchmove":        type = "mousemove";    touch = evt.changedTouches[0];break;
+        case "touchend":        type = "mouseup";    touch = evt.changedTouches[0];break;
+      }
+      newEvt.initMouseEvent(type, true, true, evt.originalTarget.ownerDocument.defaultView, 0,
+        touch.screenX, touch.screenY, touch.clientX, touch.clientY,
+        evt.ctrlKey, evt.altKey, evt.shirtKey, evt.metaKey, 0, null);
+      evt.originalTarget.dispatchEvent(newEvt);
     }
-    newEvt.initMouseEvent(type, true, true, evt.originalTarget.ownerDocument.defaultView, 0,
-      touch.screenX, touch.screenY, touch.clientX, touch.clientY,
-      evt.ctrlKey, evt.altKey, evt.shirtKey, evt.metaKey, 0, null);
-    evt.originalTarget.dispatchEvent(newEvt);
   }
   //FUNÇÕES =================================================================>
   function loadHandler(){
