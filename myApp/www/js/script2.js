@@ -160,7 +160,7 @@ var inGame = {
         return;
     },
     resetEnemyFireRate: function() {
-        firingRate = 1000;
+        firingRate = 500;
         firingRateInc = 1;
         if (debug) console.log( 'ENEMY FIRE RATE RESETED!' );
         return;
