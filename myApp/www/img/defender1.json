@@ -1,0 +1,27 @@
+{"frames": [
+{
+    "filename": "defender0000",
+    "frame": {"x":0,"y":0,"w":30,"h":43},
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": {"x":0,"y":0,"w":90,"h":43},
+    "sourceSize": {"w":30,"h":43}
+},
+{
+    "filename": "defender0001",
+    "frame": {"x":30,"y":0,"w":30,"h":43},
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": {"x":0,"y":0,"w":90,"h":43},
+    "sourceSize": {"w":30,"h":43}
+},
+{
+    "filename": "defender0002",
+    "frame": {"x":60,"y":0,"w":30,"h":43},
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": {"x":0,"y":0,"w":90,"h":43},
+    "sourceSize": {"w":30,"h":43}
+}
+
+]}

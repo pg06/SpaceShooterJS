@@ -1,0 +1,60 @@
+/*@font-face{
+  font-family: emulogic;
+  src: url("../fonte/emulogic.ttf")
+}*/
+
+@font-face {
+    font-family: 'emulogic';
+    src:url('../font/Emulogic.ttf.woff') format('woff'),
+        url('../font/Emulogic.ttf.svg#Emulogic') format('svg'),
+        url('../font/Emulogic.ttf.eot'),
+        url('../font/Emulogic.ttf.eot?#iefix') format('embedded-opentype'); 
+    font-weight: normal;
+    font-style: normal;
+}
+
+canvas {
+  /*position: absolute;*/
+}
+
+.canvas {
+  background-color: #fff;
+}
+
+a.pause {
+  width: 60px;
+  height: 50px;
+  padding: 10px;
+  position: absolute;
+  background-color: transparent;
+  top: 0;
+  right: 0;
+}
+
+a.reset {
+  border: 2px solid transparent;
+  border-bottom-color: black;
+  border-right-color: black;
+  border-radius: 4px;
+  padding: 10px;
+  position: absolute;
+  text-decoration: none;
+  background-color: #151515;
+  color: #F5F5F5;
+  top: 100px;
+  left: 100px;
+  font-family: 'emulogic';
+  font-size: 16px;
+  display: none;
+}
+
+a.reset.activated {
+  border-top-width: 2px;
+  border-top-color: #151515;
+  border-bottom-color: transparent;
+  border-left-width: 2px;
+  border-left-color: #151515;
+  border-right-color: transparent;
+  background-color: #1F1F1F;
+  color: #D5D5D5;
+}

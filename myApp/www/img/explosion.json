@@ -1,0 +1,82 @@
+{"frames": [
+{
+    "filename": "explosion0000",
+    "frame": {"x":0,"y":0,"w":39,"h":38},
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": {"x":0,"y":0,"w":289,"h":38},
+    "sourceSize": {"w":39,"h":38}
+},
+{
+    "filename": "explosion0001",
+    "frame": {"x":39,"y":0,"w":37,"h":36},
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": {"x":0,"y":0,"w":289,"h":38},
+    "sourceSize": {"w":37,"h":36}
+},
+{
+    "filename": "explosion0002",
+    "frame": {"x":76,"y":0,"w":37,"h":34},
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": {"x":0,"y":0,"w":289,"h":38},
+    "sourceSize": {"w":37,"h":34}
+},
+{
+    "filename": "explosion0003",
+    "frame": {"x":113,"y":0,"w":37,"h":34},
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": {"x":0,"y":0,"w":289,"h":38},
+    "sourceSize": {"w":37,"h":34}
+},
+{
+    "filename": "explosion0004",
+    "frame": {"x":150,"y":0,"w":32,"h":32},
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": {"x":0,"y":0,"w":289,"h":38},
+    "sourceSize": {"w":32,"h":32}
+},
+{
+    "filename": "explosion0005",
+    "frame": {"x":182,"y":0,"w":28,"h":30},
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": {"x":0,"y":0,"w":289,"h":38},
+    "sourceSize": {"w":28,"h":30}
+},
+{
+    "filename": "explosion0006",
+    "frame": {"x":210,"y":0,"w":29,"h":28},
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": {"x":0,"y":0,"w":289,"h":38},
+    "sourceSize": {"w":29,"h":28}
+},
+{
+    "filename": "explosion0007",
+    "frame": {"x":239,"y":0,"w":26,"h":25},
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": {"x":0,"y":0,"w":289,"h":38},
+    "sourceSize": {"w":26,"h":25}
+},
+{
+    "filename": "explosion0008",
+    "frame": {"x":265,"y":0,"w":21,"h":24},
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": {"x":0,"y":0,"w":289,"h":38},
+    "sourceSize": {"w":21,"h":24}
+},
+{
+    "filename": "explosion0009",
+    "frame": {"x":286,"y":0,"w":30,"h":40},
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": {"x":0,"y":0,"w":289,"h":38},
+    "sourceSize": {"w":30,"h":40}
+}
+]}

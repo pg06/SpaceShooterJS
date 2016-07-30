@@ -1,0 +1,34 @@
+{"frames": [
+{
+    "filename": "alien0000",
+    "frame": {"x":0,"y":0,"w":30,"h":40},
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": {"x":0,"y":0,"w":124,"h":40},
+    "sourceSize": {"w":30,"h":40}
+},
+{
+    "filename": "alien0001",
+    "frame": {"x":31,"y":0,"w":30,"h":40},
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": {"x":0,"y":0,"w":124,"h":40},
+    "sourceSize": {"w":30,"h":40}
+},
+{
+    "filename": "alien0002",
+    "frame": {"x":62,"y":0,"w":30,"h":40},
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": {"x":0,"y":0,"w":124,"h":40},
+    "sourceSize": {"w":30,"h":40}
+},
+{
+    "filename": "alien0003",
+    "frame": {"x":93,"y":0,"w":30,"h":40},
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": {"x":0,"y":0,"w":124,"h":40},
+    "sourceSize": {"w":30,"h":40}
+}
+]}

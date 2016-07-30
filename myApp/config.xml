@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<widget id="com.ionicframework.myapp820633" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+  <name>SpaceShooter</name>
+  <description>
+        SpaceShooter JS game
+    </description>
+  <author email="pgm@3pir.com.br" href="https://github.com/pg06/SpaceShooterJS">
+      Paulo Gabriel
+    </author>
+  <content src="index.html"/>
+  <access origin="*"/>
+  <preference name="webviewbounce" value="false"/>
+  <preference name="UIWebViewBounce" value="false"/>
+  <preference name="DisallowOverscroll" value="true"/>
+  <preference name="SplashScreenDelay" value="5000"/>
+  <preference name="FadeSplashScreenDuration" value="0"/>
+  <preference name="android-minSdkVersion" value="16"/>
+  <preference name="BackupWebStorage" value="none"/>
+  <preference name="SplashScreen" value="screen"/>
+  <preference name="Fullscreen" value="true"/>
+  <feature name="StatusBar">
+    <param name="ios-package" value="CDVStatusBar" onload="true"/>
+  </feature>
+  <platform name="android">
+    <icon src="resources/android/icon/icon_android.png" density="ldpi"/>
+    <icon src="resources/android/icon/icon_android.png" density="mdpi"/>
+    <icon src="resources/android/icon/icon_android.png" density="hdpi"/>
+    <icon src="resources/android/icon/icon_android.png" density="xhdpi"/>
+    <icon src="resources/android/icon/icon_android.png" density="xxhdpi"/>
+    <icon src="resources/android/icon/icon_android.png" density="xxxhdpi"/>
+    <splash src="resources/android/splash/splashscreen_android.png" density="land-ldpi"/>
+    <splash src="resources/android/splash/splashscreen_android.png" density="land-mdpi"/>
+    <splash src="resources/android/splash/splashscreen_android.png" density="land-hdpi"/>
+    <splash src="resources/android/splash/splashscreen_android.png" density="land-xhdpi"/>
+    <splash src="resources/android/splash/splashscreen_android.png" density="land-xxhdpi"/>
+    <splash src="resources/android/splash/splashscreen_android.png" density="land-xxxhdpi"/>
+    <splash src="resources/android/splash/splashscreen_android.png" density="port-ldpi"/>
+    <splash src="resources/android/splash/splashscreen_android.png" density="port-mdpi"/>
+    <splash src="resources/android/splash/splashscreen_android.png" density="port-hdpi"/>
+    <splash src="resources/android/splash/splashscreen_android.png" density="port-xhdpi"/>
+    <splash src="resources/android/splash/splashscreen_android.png" density="port-xxhdpi"/>
+    <splash src="resources/android/splash/splashscreen_android.png" density="port-xxxhdpi"/>
+  </platform>
+</widget>
