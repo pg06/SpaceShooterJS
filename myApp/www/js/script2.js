@@ -533,7 +533,7 @@ function collisionHandler (bullet, alien) {
         weapon.callAll('kill');
         // next level
         inGame.resetEnemy();
-        inGame.makeAliens();
+
         //the "click to restart" handler
         // game.input.onTap.addOnce(restart,this);
     }
