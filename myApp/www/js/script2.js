@@ -52,7 +52,7 @@ var checkEndGame = false;
 
 var enemyBullets;
 var firingTimer = 0;
-var firingRate = 1000;
+var firingRate = 500;
 var firingRateInc = 1;
 var stateText;
 var livingEnemies = [];
@@ -116,6 +116,7 @@ var inGame = {
         return;
     },
     startgame: function () {
+        if (resetBtn.style.display === 'block') return;
         this.unpause();
         stateText.visible = false;
         checkEndGame = false;
@@ -179,10 +180,10 @@ var inGame = {
         if (debug) console.log( 'PLAYER RESETED!' );
         return;
     },
-    resetEnemy: function() {
+    resetEnemy: function(ifResetEnemyFireRate) {
         enemyBullets.callAll('kill');
         aliens.removeAll(true);
-        this.resetEnemyFireRate();
+        if (ifResetEnemyFireRate) this.resetEnemyFireRate();
         this.makeAliens();
         if (debug) console.log( 'ENEMY REVIVED!' );
         return;
@@ -524,7 +525,7 @@ function collisionHandler (bullet, alien) {
     {
         explosions.callAll('kill');
         // score += 1 * firingRate; // score especial
-        firingRate -= 20;
+        firingRate = 19*firingRate/20;
         firingRateInc += 1;
         scoreText.text = scoreString + score;
 
