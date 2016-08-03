@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html ng-app="starter">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, height=device-height">
@@ -12,20 +12,67 @@
     <script src="lib/ionic/js/ionic.bundle.js"></script>
 
     <!-- cordova script (this will be a 404 during development) -->
-    <!-- <script src="lib/ngCordova/dist/ng-cordova.min.js"></script> -->
+    <script src="js/ng-cordova.min.js"></script>
     <script src="cordova.js"></script>
+
+    <!-- <script src="js/angular.js"></script> -->
 
     <!-- your app's js -->
     <script src="js/app.js"></script>
-    <script src="js/controllers.js"></script>
-    <script src="js/services.js"></script>
   </head>
-  <body bgcolor="#000">
-    <div id="phaser" onclick="inGame.startgame();"></div>
-    <a class="reset" href="#" onclick="inGame.reset()">REINICIAR</a>
-    <a class="pause" href="#" onclick="inGame.pause()"><img src="img/pause_icon.png"></a>
+  <body bgcolor="">
+    <div id="myDiv" ng-controller="myScore">
+        <div id="phaser" data-maxscore="0" data-tries="0" data-score="0"></div>
+        <a class="reset ux" href="#" onclick="inGame.reset()">REINICIAR</a>
+        <a class="pause" href="#"><img src="img/pause_icon.png"></a>
+        <a class="sound" data-state="on" href="#"><img src="img/soundoff_icon.png"></a>
+    </div>
+    <span class="ux-touch ux"></span>
+    <span class="ux-ship ux"></span>
     <script src="js/phaser.min.js"></script>
     <script src="js/jquery-2.0.3.min.js"></script>
-    <script src="js/script2.js"></script>
+    <script src="js/script-phaser.js"></script>
+    <script type="text/javascript">
+        window.addEventListener('load', function(){ // on page load
+            var pauseBtn = document.querySelector('a.pause');
+            var soundBtn = document.querySelector('a.sound');
+            var resetBtn = document.querySelector('a.reset');
+            var phaserDiv = document.querySelector('div#phaser');
+            var FIRE = true;
+            var STOP_FIRE = false;
+
+            // Começar o jogo ao clicar na tela
+            // E atirar enquanto tiver tocando na tela
+            phaserDiv.addEventListener('touchstart', function(e){
+                inGame.startgame(e);
+                inGame.toggleMissile(FIRE);
+            }, false)
+
+            // Parar o tiro ao terminar de tocar na tela
+            phaserDiv.addEventListener('touchend', function(e){
+                inGame.toggleMissile(STOP_FIRE);
+            }, false)
+
+            // Mudar a posicao da nave ao arrastar a tela
+            phaserDiv.addEventListener('touchmove', function(e){
+                inGame.setPlayerPosition(e);   
+            }, false)
+
+            // Pausar o jogo ao clicar no botao de pause
+            pauseBtn.addEventListener('touchstart', function(e){
+                inGame.pause();
+            }, false)
+
+            // Pausar o jogo ao clicar no botao de pause
+            soundBtn.addEventListener('touchstart', function(e){
+                soundBtn.children[0].setAttribute('src', "img/sound"+soundOpt+"_icon.png");
+                soundOpt = soundOpt === 'on' ? 'off' : 'on';
+                soundBtn.dataset.state = soundOpt;
+                inGame.sound(soundOpt);
+                window.angularControllerUpdateConfig();
+            }, false)
+            
+        }, false)
+    </script>
   </body>
 </html>

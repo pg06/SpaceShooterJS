@@ -16,11 +16,23 @@
 canvas {
   /*position: absolute;*/
 }
-
+#save-score {
+  /*display: none;*/
+  position: absolute;
+  left: -1000px;
+  top: -1000px;
+}
 .canvas {
   background-color: #fff;
 }
-
+.ux {
+  position: absolute;
+  bottom: 25px;
+  right: 0;
+  left: 0;
+  margin-left: auto;
+  margin-right: auto;
+}
 a.pause {
   width: 60px;
   height: 50px;
@@ -29,6 +41,18 @@ a.pause {
   background-color: transparent;
   top: 0;
   right: 0;
+  display: none;
+}
+
+a.sound {
+  width: 60px;
+  height: 50px;
+  padding: 10px;
+  position: absolute;
+  background-color: transparent;
+  top: 0;
+  right: 0;
+  display: none;
 }
 
 a.reset {
@@ -37,12 +61,12 @@ a.reset {
   border-right-color: black;
   border-radius: 4px;
   padding: 10px;
-  position: absolute;
+  width: 170px;
+  height: 44px;
+  bottom: 50px;
   text-decoration: none;
   background-color: #151515;
   color: #F5F5F5;
-  top: 100px;
-  left: 100px;
   font-family: 'emulogic';
   font-size: 16px;
   display: none;
@@ -57,4 +81,67 @@ a.reset.activated {
   border-right-color: transparent;
   background-color: #1F1F1F;
   color: #D5D5D5;
+}
+
+
+.ux-touch {
+  width: 30px;
+  height: 30px;
+  border: 2px dashed #f3f3f3;
+  border-radius: 20px;
+  margin-left: 47%;
+  animation: slowMove 3s infinite, uxClickEffectTouch 3s infinite;
+  z-index: 100;
+}
+.ux-ship {
+  bottom: 20px;
+  background: url(../img/defender1.png);
+  background-position: 0px 0px;
+  margin-left: 47%;
+  width: 30px;
+  height: 43px;
+  animation: slowMove 3s infinite, uxClickEffectShip 3s infinite;
+}
+
+@keyframes slowMove {
+  50% {
+    margin-left: 47%;
+    /*margin-right: 50%;*/
+  }
+  100% {
+    margin-left: 30%;
+  }
+}
+@keyframes uxClickEffectShip {
+  0% {
+    /*border: 2px dashed #f3f3f3;
+    padding: 2px;*/
+    /*border-radius: 20px;*/
+    /*-webkit-filter: drop-shadow(0 0 2px #transparent);
+    filter: drop-shadow(0 0 2px transparent);*/
+  }
+  50% {
+    
+    /*-webkit-filter: drop-shadow(0 0 2px #999);
+    filter: drop-shadow(0 0 2px #999);*/
+  }
+  100% {
+
+    /*-webkit-filter: drop-shadow(0 0 2px #999);
+    filter: drop-shadow(0 0 2px #999);*/
+  }
+}
+@keyframes uxClickEffectTouch {
+  0% {
+    opacity: 0;
+  }
+  70% {
+
+    opacity: 1;
+  }
+  100% {
+    
+    opacity: 1;
+    
+  }
 }
